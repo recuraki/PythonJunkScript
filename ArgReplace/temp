@@ -1,0 +1,2 @@
+interface %(eth)s
+ ip addr %(addrv4)s/24
