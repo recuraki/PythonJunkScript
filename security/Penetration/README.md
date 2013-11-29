@@ -18,3 +18,20 @@ hOE
 (cont..)
 ```
 
+sample{SSH,Telnet}.py
+================================
+
+telnet/SSHのペネトレーションテストのために、
+引数に与えられたcsvファイルのusername,passwordの対を元に、
+ホストに対してアクセスを試みます。
+[OK]は成功したパスワードを表示します。
+
+```text
+./sampleTelnet.py resourcePassword.csv
+./sampleSSH.py resourcePassword.csv
+[Try]: user
+[Try]: user2
+[Try]: user999
+[OK]: user999
+[Try]: user1000
+```
