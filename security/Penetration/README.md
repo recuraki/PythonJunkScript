@@ -29,9 +29,9 @@ telnet/SSHのペネトレーションテストのために、
 ```text
 ./sampleTelnet.py resourcePassword.csv
 ./sampleSSH.py resourcePassword.csv
-[Try]: user
-[Try]: user2
-[Try]: user999
-[OK]: user999
-[Try]: user1000
+Try]: user
+Try]: user2
+Try]: user999
+OK]: user999
+Try]: user1000
 ```
