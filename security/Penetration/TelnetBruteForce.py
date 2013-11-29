@@ -9,7 +9,6 @@ class TelnetBruteForce():
     f_debug = False
 
     def __init__(self, f_debug = False):
-        print "hoge"
         self.inPort = 23
         self.f_debug = f_debug
         
