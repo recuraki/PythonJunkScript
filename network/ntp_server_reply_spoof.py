@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/opt/local/bin/python2.7
 # -*- coding: utf-8 -*-
 
 from scapy.all import *
@@ -25,16 +25,39 @@ import sys
 None
 """
 
-dstipaddr="192.168.0.1"
+conf.iface = "en0"
+dstipaddr="10.5.7.59"
 
-print "NTP Pkt... "
-
+inCurTime = int(time.time()) + 2208988800 + 1
+print "%x" % inCurTime
+inBigCurTime = int()
+inBigCurTime += (inCurTime & 0x000000ff) << 8 
+inBigCurTime += (inCurTime & 0x0000ff00) >> 8 
+inBigCurTime += (inCurTime & 0x00ff0000) << 8
+inBigCurTime += (inCurTime & 0xff000000) >> 8
+inBigCurTime = inBigCurTime << 32
+#inBigCurTime = inBigCurTime << 16
+inBigCurTime = inCurTime 
+print "%x" % inBigCurTime
 ntp = (
       Ether()/
-      IP(dst=dstipaddr)/
+      IP(src="17.151.16.38", dst=dstipaddr)/
       UDP(sport=123,dport=123)/
-      NTP(version=4, mode="server", poll=4L, stratum=1L, delay=1.0, dispersion=1.0, id="8.8.8.8", precision=235L, ref=time.time())
+      NTP(
+        version=4,
+        mode="server",
+        poll=4L,
+        stratum=1L,
+        delay=1.0,
+        dispersion=1.0,
+        id="17.151.16.38", 
+        precision=235L,
+        ref = inBigCurTime,
+        orig = inBigCurTime,
+        recv=inBigCurTime,
+        sent=inBigCurTime,
+       )
       )
 
 print(ntp["NTP"].show())
-#sendp(ntp, verbose=1) 
+sendp(ntp, verbose=1) 
