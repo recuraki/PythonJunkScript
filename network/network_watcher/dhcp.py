@@ -56,19 +56,7 @@ class DHCPSender(object):
       BOOTP(chaddr = chaddr, xid=xid)/
       DHCP(options=[('message-type','discover'),('end')])
       )
-"""
-while True: 
-  time.sleep(1)
-  stime = time.time()
-  sendp(ntp, verbose=0) 
-  pkt = sniff(filter="port 123 and host " + dstipaddr, count=1, timeout=1)
-  etime = time.time()
-  if pkt == []:
-    print("T/O")
-  else:
-    npkt = pkt[0]["NTP"]
-    print(datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S") + "," + str(npkt.precision) + "," + str(npkt.delay) + "," + str(npkt.dispersion) + "," + str(etime - stime))
-"""
+
 if __name__ == "__main__":
   dh = DHCPReciver()
   dh.daemon = True
