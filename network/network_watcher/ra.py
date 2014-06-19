@@ -1,4 +1,4 @@
-#!/usr/bin/python3.2
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from scapy.all import *
@@ -14,16 +14,14 @@ class RAReciver(threading.Thread):
     threading.Thread.__init__(self)
 
   def handle(handle, pkt):
-    print(pkt.display())
-    pass
-    if DHCP in pkt:
-      mtype = pkt[DHCP].options[0][1]
-      your_ipaddr = pkt[BOOTP].yiaddr
-      client_mac = pkt.dst
+    if ICMPv6ND_RA in pkt:
+      server_mac = pkt.src
+      server_ip = pkt[IPv6].src
+      adved_prefix = pkt[ICMPv6NDOptPrefixInfo].prefix
+      print '%s RA:  %s(%s)' % (adved_prefix, server_mac, server_ip)
 
   def run(self):
     sniff(prn=self.handle, filter="icmp6", store=0)
-
 
 class RASender(object):
   def __init__(self, iface):
@@ -32,12 +30,12 @@ class RASender(object):
 
   def send(self):
     self.pkt_init()
-    send(self.msg_disc,verbose=0)
+    sendp(self.msg_disc,verbose=1)
 
   def pkt_init(self):
-    
     self.msg_disc = (
-      Ether(src = self.srcaddr, dst="ff:ff:ff:ff:ff:ff")/
+      Ether(
+      src = self.srcaddr, dst="ff:ff:ff:ff:ff:ff")/
       IPv6(dst="ff02::2")/
       ICMPv6ND_RS()
       )
@@ -46,9 +44,7 @@ if __name__ == "__main__":
   dh = RAReciver()
   dh.daemon = True
   dh.start()
-
   d = RASender("eth0")
   d.send()
-
   time.sleep(1)
 

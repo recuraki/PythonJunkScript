@@ -23,9 +23,11 @@ class DHCPReciver(threading.Thread):
     if DHCP in pkt:
       mtype = pkt[DHCP].options[0][1]
       your_ipaddr = pkt[BOOTP].yiaddr
-      client_mac = pkt.dst
+      dhcpserver_mac = pkt.src
+      dhcpserver_ip = pkt[IP].src
       if mtype == MESSAGE_TYPE_OFFER:
-        print '%s DHCP OFFER(transaction:%s): %s for %s from %s' % (num_offers,pkt[BOOTP].xid,your_ipaddr,client_mac,pkt[IP].src)
+        print '%s DHCP OFFER:  %s(%s)' % (your_ipaddr,dhcpserver_mac, dhcpserver_ip)
+
       elif mtype == MESSAGE_TYPE_ACK:
         pass
 
@@ -33,7 +35,7 @@ class DHCPReciver(threading.Thread):
         pass
 
   def run(self):
-    sniff(prn=self.handle, filter="udp and (port 68 or port 67)", store=0)
+    sniff(prn=self.handle, filter="udp and (port 68 or port 67)", store=0, timeout=2)
  
 class DHCPSender(object):
   def __init__(self, iface):
@@ -54,19 +56,7 @@ class DHCPSender(object):
       BOOTP(chaddr = chaddr, xid=xid)/
       DHCP(options=[('message-type','discover'),('end')])
       )
-"""
-while True: 
-  time.sleep(1)
-  stime = time.time()
-  sendp(ntp, verbose=0) 
-  pkt = sniff(filter="port 123 and host " + dstipaddr, count=1, timeout=1)
-  etime = time.time()
-  if pkt == []:
-    print("T/O")
-  else:
-    npkt = pkt[0]["NTP"]
-    print(datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S") + "," + str(npkt.precision) + "," + str(npkt.delay) + "," + str(npkt.dispersion) + "," + str(etime - stime))
-"""
+
 if __name__ == "__main__":
   dh = DHCPReciver()
   dh.daemon = True
