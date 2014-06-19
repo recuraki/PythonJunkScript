@@ -42,6 +42,7 @@ def proc_specific_dir(arg, liExistMonth = []):
     liMd = glob.glob(d_input + "/*.md")
 
     if liMd != None:
+        liMd.sort()
         liMd.reverse()
         
     article = []
