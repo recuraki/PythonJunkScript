@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+
 import random
 count_lines, count_per_line, count_per_sent = 5,5,5
 
