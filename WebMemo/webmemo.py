@@ -100,9 +100,15 @@ def proc_specific_dir(arg, liExistMonth = []):
     env   = jinja2.Environment(loader=jinja2.FileSystemLoader(arg.o_template, encoding='utf-8'))
     templ = env.get_template("index.html")
 
+    """
+    ここでheaderは「テンプレート」のなかの特殊な変数
+    実際は固定的なコンテンツからファイルを読み込みます
+    """
     fnHeader = arg.o_inputdir + "/" + "header.md"
     header_content = ""
+    # ファイルが存在するときのみの処理
     if os.path.exists(fnHeader):
+        # 通常の記事ファイルと同様の処理を行います
         with codecs.open(fnHeader, mode = "r", encoding = "utf-8") as fd:
             header_content = md2html(fnHeader)
             fd.close()
@@ -113,6 +119,9 @@ def proc_specific_dir(arg, liExistMonth = []):
     
 
 def proc_output(arg, html):
+    """
+    結果をファイルに出力します
+    """
     stOutpath = arg.o_outputdir + "/" +  "%04d%02d.html" % (arg.o_targetyear, arg.o_targetmonth)
     with codecs.open(stOutpath, mode = "w", encoding = "utf-8") as fd:
         fd.write(html)
