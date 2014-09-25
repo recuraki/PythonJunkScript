@@ -61,7 +61,15 @@ def proc_specific_dir(arg, liExistMonth = []):
         article.append({"html": html, "stDate": stDate})
     env   = jinja2.Environment(loader=jinja2.FileSystemLoader(arg.o_template, encoding='utf-8'))
     templ = env.get_template("index.html")
-    html  = templ.render(article = article)
+
+    fnHeader = arg.o_inputdir + "/" + "header.md"
+    header_content = ""
+    if os.path.exists(fnHeader):
+        with codecs.open(fnHeader, mode = "r", encoding = "utf-8") as fd:
+            header_content = md2html(fnHeader)
+            fd.close()
+    
+    html  = templ.render(article = article, header_content = header_content)
     return(html)
     
 
