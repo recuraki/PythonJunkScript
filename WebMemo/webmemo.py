@@ -3,6 +3,15 @@
 
 """
 Web Wiki作成するよ
+easy_install markdown
+easy_install jinja2
+mkdir ~/tmp
+cd ~/tmp
+git clone https://github.com/dart-lang/py-gfm.git
+cd py-gfm
+python setup.py install
+  207  sudo pip install mdx_linkify
+  208  sudo  pip install mdx_del_ins
 """
 
 import sys
