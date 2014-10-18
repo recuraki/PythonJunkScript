@@ -1,0 +1,5 @@
+*.pyc
+cover
+.coverage
+.cache
+.cache.*
