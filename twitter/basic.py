@@ -1,6 +1,22 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+使い方:
+TwitterでApplicationを登録して、Consumer KeyとSecretを得ます。
+プログラムを実行すると、これらを入力するeditorが(pitによって)起動されるので、
+これらを書き込みます(ちなみに""は不要です)
+もし、編集に失敗した場合、
+~/.put/defautなどを消してください
+
+次に、URLが表示されて
+PIN:
+と言われます。これはUserごとのTokenを得るためです。
+
+ブラウザでPINを得たら、入力します。
+"""
+
+
 # 以下を参考にしました。
 # http://d.hatena.ne.jp/reppets/20100522/1274553529
 
