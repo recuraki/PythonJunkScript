@@ -2,7 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """
-Web Wiki作成用スクリプト
+Web Wiki作成するよ
+easy_install markdown
+easy_install jinja2
+mkdir ~/tmp
+cd ~/tmp
+git clone https://github.com/dart-lang/py-gfm.git
+cd py-gfm
+python setup.py install
+sudo pip install mdx_linkify
+sudo  pip install mdx_del_ins
 """
 
 # 標準ライブラリのインポート
