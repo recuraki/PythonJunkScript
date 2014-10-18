@@ -12,20 +12,30 @@ from urllib import urlencode
 import os
 import sys
 import ConfigParser
+import json
 
+"""
+pitを使うのでEDITORを必須にする
+"""
 if not "EDITOR" in os.environ:
   print("OS-EDITOR = NONE")
   #sys.exit(1)
 
 def get_Consumersecret():
-  piConf = Pit.get("twitter-consumer", {'require':
+    """
+    pitからcustomer keyを呼ぶ
+      """
+    piConf = Pit.get("twitter-consumer", {'require':
                                  {'ckey': 'ConsumerKey',
                                   'csecret': 'ConsumerSecret'
                                   }})
-  return(piConf['ckey'], piConf['csecret'])
+    return(piConf['ckey'], piConf['csecret'])
 
 
 class TwitterUserKey():
+  """
+  oauth用のクラス。
+  """
   ukey = ""
   usecret = ""
   urlReqToken = "https://api.twitter.com/oauth/request_token"
@@ -37,8 +47,12 @@ class TwitterUserKey():
     pass
 
   def getfromcfg(self):
+      """
+      既存の設定ファイルにuser key情報が含まれていたらそちらから取得する
+      """
       cfg = ConfigParser.SafeConfigParser()
       res = cfg.read(self.configname)
+      # Twitter sectionがない＝ファイルが生成されていないと判断する
       if not cfg.has_section("twitter"):
           return("", "")
       ukey = cfg.get("twitter", "ukey", "")
@@ -47,6 +61,9 @@ class TwitterUserKey():
 
 
   def setcfg(self, ukey, usec):
+      """
+      設定ファイルにuserのtoken情報を書き込む
+      """
       cfg = ConfigParser.SafeConfigParser()
       cfg.add_section("twitter")
       cfg.set("twitter", "ukey", ukey)
@@ -54,6 +71,12 @@ class TwitterUserKey():
       cfg.write(open(self.configname, "w"))
 
   def get(self, ckey, csec):
+    """
+    oauthを行う。
+    tokenを要求した後、PINの入力を受付け、
+    その結果、token情報を返す
+    """
+
     """
     リプライをパースするλ式
     oauth_token=IE&oauth_token_secret=0x&oauth_callback_confirmed=true'
@@ -63,33 +86,35 @@ class TwitterUserKey():
     """
     parseparam = lambda x: dict(map(lambda y: y.split('='), x.split("&")))
 
+    # 設定ファイルに情報があるならそこからもらい返す
     ukey, usec = self.getfromcfg()
-
     if ukey != "" and usec != "":
       return( (ukey, usec) )
 
-    consumer = Consumer(ckey, csec)
-    client = Client(consumer, None)
+    # oauth用のクラス定義
+    client = Client(Consumer(ckey, csec), None)
 
+    # トークンの要求
     liRes = client.request(self.urlReqToken,
                         'GET')
     diRes = parseparam(liRes[1])
 
+    # 得たトークンを基にPINの要求を行う
     request_token = Token(diRes["oauth_token"], diRes["oauth_token_secret"])
     print("plz access: " + self.urlReqPin + request_token.key)
     stPin = raw_input('PIN:')
     request_token.set_verifier(stPin)
 
+    # 実際のキーをもらう
     client.token = request_token
-
     liRes = client.request(self.urlReqKey,
                         'POST')
+    # 情報をパースする
     diRes = parseparam(liRes[1])
-    print diRes
-
     ukey = diRes["oauth_token"]
     usec = diRes["oauth_token_secret"]
 
+    # 設定ファイルに書き込む
     self.setcfg(ukey, usec)
 
     return(
@@ -108,7 +133,23 @@ class Twitter(object):
         res= self.client.request(self.urlUpdate,
                             'POST',
                             urlencode({"status": content}))
-        print res
+        stRetcode = res[0]['status']
+        """
+        200 = 成功の場合のみ抜ける
+        """
+        if stRetcode == "200":
+            return(True)
+        """
+        errorは
+        {"errors":[{"code":187,"message":"Status is a duplicate."}]}
+        のようにはいる
+        """
+        liErrors = json.loads(res[1])
+        for diError in liErrors.get("errors", []):
+            print(diError['message'])
+
+
+
 
   
 if __name__ == "__main__":
@@ -117,5 +158,5 @@ if __name__ == "__main__":
     (ukey, usec) = tuk.get(ckey, csec)
     twi = Twitter(ckey, csec, ukey, usec)
     print("init end")
-    twi.post("hoge")
+    twi.post("hoge2")
 
