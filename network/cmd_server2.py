@@ -11,7 +11,7 @@ class InputBuffer(object):
         self.p = p
         self.sock = sock
 
-    def input_char(self, chInput):
+    def input_char(self, sd, chInput):
 
         #if ord(chInput) < int("0x20", 16) or ord(chInput) > int("0x7f", 16):
         #   return
@@ -19,6 +19,7 @@ class InputBuffer(object):
             return
         if ord(chInput) == int("0x0d", 16):
             print("enter")
+            client_sock.send("\r\n")
             self.run()
             self.stBuffer = ""
             return
@@ -68,9 +69,9 @@ stRemoteAddr, inRemotePort = client_addr
 
 client_sock.send("\377\375\042");
 
-client_sock.send(telnetlib.IAC + "\n")
-client_sock.send(telnetlib.WILL + " ")
-client_sock.send(telnetlib.ECHO + "\n")
+#client_sock.send(telnetlib.IAC + "\n")
+#client_sock.send(telnetlib.WILL + " ")
+#client_sock.send(telnetlib.ECHO + "\n")
 
 p = MyCmd(stdin = client_sock)
 p.prompt = 'My Prompt: '
@@ -89,7 +90,8 @@ while True:
 
     # 受け取った文字列を処理する
     for i in range(len(stMsg)):
-        InputBuffer.input_char(stMsg[i])
+        InputBuffer.input_char(client_sock, stMsg[i])
+        
 
 client_sock.close()
 sock.close()
