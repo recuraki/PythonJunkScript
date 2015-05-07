@@ -55,7 +55,7 @@ def md2html(fnInput):
         # MarkDownを作成する際に、コードハイライトを有効にする(ためのオプションの変数)
         codehilite = 'codehilite(force_linenos=True, guess_lang=False, css_class=syntax)'
         # MarkDownファイルからHTMLを作成
-        html = markdown.markdown(fd.read(), ['extra', codehilite, 'gfm' ])
+        html = markdown.markdown(fd.read(), ['extra',  codehilite , 'gfm'])
     fd.close()
     # htmlをUTF-8にエンコードして返す
     return(html.encode('utf-8'))
