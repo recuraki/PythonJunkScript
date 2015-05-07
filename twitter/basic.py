@@ -20,6 +20,14 @@ PIN:
 # 以下を参考にしました。
 # http://d.hatena.ne.jp/reppets/20100522/1274553529
 
+# oauth2のライブラリの編集をする
+# http://blog.livedoor.jp/iakyi/archives/4111571.html
+#
+# /Library/Python/2.7/site-packages/oauth2/__init__.py
+#
+
+from __future__ import unicode_literals
+
 # pip install pit
 from pit import Pit
 # pip instal oauth2
@@ -29,6 +37,13 @@ import os
 import sys
 import ConfigParser
 import json
+import pickle
+import datetime
+import types
+
+
+import sys, codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
 
 """
 pitを使うのでEDITORを必須にする
@@ -74,7 +89,6 @@ class TwitterUserKey():
       ukey = cfg.get("twitter", "ukey", "")
       usec = cfg.get("twitter", "usec", "")
       return(ukey, usec)
-
 
   def setcfg(self, ukey, usec):
       """
@@ -141,38 +155,167 @@ class TwitterUserKey():
     )
 
 class Twitter(object):
+
+    fnCache = "./.cache.twitter"
+    objCache = {}
     urlUpdate = "https://api.twitter.com/1.1/statuses/update.json"
-    def __init__(self, ckey, csec, ukey, usec):
+    urlFriendIds = "https://api.twitter.com/1.1/friends/ids.json"
+    urlSearchTweet = "https://api.twitter.com/1.1/search/tweets.json"
+
+    def _override_tourl(self):
+        """Serialize as a URL for a GET request."""
+        base_url = urlparse.urlparse(self.url)
+        try:
+            query = base_url.query
+        except AttributeError:
+            # must be python <2.5
+            query = base_url[4]
+        query = parse_qs(query)
+        for k, v in self.items():
+            query.setdefault(k, []).append(v)
+
+        try:
+            scheme = base_url.scheme
+            netloc = base_url.netloc
+            path = base_url.path
+            params = base_url.params
+            fragment = base_url.fragment
+        except AttributeError:
+            # must be python <2.5
+            scheme = base_url[0]
+            netloc = base_url[1]
+            path = base_url[2]
+            params = base_url[3]
+            fragment = base_url[5]
+
+        url = (scheme, netloc, path, params,
+               urllib.urlencode(query, True), fragment)
+        return urlparse.urlunparse(url)
+
+    def __init__(self, ckey, csec, ukey, usec, use_cache = True):
         self.client = Client(Consumer(ckey, csec),
                              Token(ukey, usec))
-    def post(self, content):
-        res= self.client.request(self.urlUpdate,
-                            'POST',
-                            urlencode({"status": content}))
-        stRetcode = res[0]['status']
-        """
-        200 = 成功の場合のみ抜ける
-        """
-        if stRetcode == "200":
-            return(True)
+
+        self.client.to_url = self._override_tourl
+
+        try:
+            f = open(self.fnCache, 'rb')
+        except IOError:
+            print("no cache file")
+            self._write_Cache()
+        else:
+            self.objCache = pickle.load(f)
+
+    def _write_Cache(self):
+        with open(self.fnCache, 'wb') as f:
+            pickle.dump(self.objCache, f)
+
+    def _set_Cache(self, name, val):
+        print("setCache:" + name + "-" + val)
+        curDate = datetime.datetime.now()
+        self.objCache[name] = (curDate, val)
+
+    def _get_Cache(self, name, timeout = 0):
+        print("getCache:" + name )
+
+        # キャッシュがそもそも存在しなければNoneを返す
+        if not name in self.objCache:
+            return None
+
+        # 現在の時刻とキャッシュの時刻を比較する
+        curDate = datetime.datetime.now()
+        (cacheDate, val ) = self.objCache[name]
+        deltaDate = curDate - cacheDate
+
+        # 指定されたキャッシュ期限をすぎていた場合、なにも返さない
+        if deltaDate.seconds > timeout:
+            return None
+
+        # キャッシュ期間内であればキャッシュの値を返す
+        return val
+
+    def _handle_error(self, stErrors):
         """
         errorは
         {"errors":[{"code":187,"message":"Status is a duplicate."}]}
         のようにはいる
         """
-        liErrors = json.loads(res[1])
+        liErrors = json.loads(stErrors)
         for diError in liErrors.get("errors", []):
             print(diError['message'])
 
+    def post(self, content):
+        res = self.client.request(self.urlUpdate,
+                            'POST',
+                            urlencode({"status": content}))
+        stRetcode = res[0]['status']
+        # 200のときのみ抜ける
+        if stRetcode == "200":
+            return(True)
+        self._handle_error(res[1])
+
+    def get_friend_ids(self):
+        friend_ids = self._get_Cache("friend_ids", timeout=1800)
+        if friend_ids:
+            return friend_ids
+
+        res = self.client.request(self.urlFriendIds,
+                        'GET')
+        stRetcode = res[0]['status']
+        # 200のときのみ抜ける
+        if stRetcode == "200":
+            friend_ids = res[1]
+
+        self._set_Cache("friend_ids", friend_ids)
+        self._write_Cache()
+        return friend_ids
+
+        # print json.dumps(res, indent=4)
+
+    def search_tweets(self, keyword):
+        args = dict()
+        args["q"] = "ほげ"
+        #args["result_type"] = "recent"
+        #args["count"] = "10"
+        #args["include_entities"] = "True"
+
+        params = urlencode(dict([k, v.encode('utf-8') if isinstance(v, unicode) else v] for k, v in args.items()))
+
+        """
+        params={}
+        print args
+        for k, v in args.iteritems():
+            if isinstance(v, unicode):
+                params[k] = unicode(v).encode('utf-8')
+            else:
+                params[k] = v
+        params = urlencode(params)
+        """
+
+        print params
 
 
+        url = self.urlSearchTweet + "?" + params
+        url = "https://api.twitter.com/1.1/search/tweets.json?q=%e3%82%82%e3%81%92"
+        print url
 
-  
+        res = self.client.request(url)
+        print json.dumps(res, indent=4)
+
+
 if __name__ == "__main__":
+    # Twitterオブジェクトに渡すキーの初期化
     (ckey, csec) = get_Consumersecret()
     tuk = TwitterUserKey()
     (ukey, usec) = tuk.get(ckey, csec)
+
+    # Twitterクライアントオブジェクトの生成
     twi = Twitter(ckey, csec, ukey, usec)
+
     print("init end")
-    twi.post("hoge2")
+
+    #twi.post("hoge")
+    #twi.search_tweets("#test")
+    #print twi.get_friend_ids()
+
 
