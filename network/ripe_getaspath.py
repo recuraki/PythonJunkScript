@@ -22,7 +22,18 @@ def parse_resp2(dat, addr):
             print_path(d["path"], addr)
 
 def print_path(dat, addr):
+    dat.reverse()
+    dat = del_uniq(dat)
     print addr + ">" + ",".join(map(lambda x: str(x), dat))
+
+def del_uniq(dat):
+  p = ""
+  l = []
+  for d in dat:
+    if p != d:
+      l.append(d)
+    p = d
+  return(l)
 
 if __name__ == "__main__":
     argv = sys.argv
