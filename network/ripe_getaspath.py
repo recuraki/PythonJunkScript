@@ -67,7 +67,6 @@ if __name__ == "__main__":
     parser.add_option("-l", "--length", dest="o_length", action="store", default="250")
     parser.add_option("-u", "--unique", dest="f_uniq", action="store_true", default=False)
     (options, args) = parser.parse_args()
-    print options
     if len(args) != 1:
         sys.exit(1)
     qurl = url + args[0]
