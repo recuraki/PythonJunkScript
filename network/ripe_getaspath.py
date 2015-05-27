@@ -25,14 +25,30 @@ def parse_resp2(dat, addr, opts):
     2段目
     """
     l = []
+    graph_con = []
     # bgp_stateのそれぞれのas_pathを文字列で得る
     # 結果はlにリストで入る
     for d in dat:
         if "path" in d:
-            l.append(get_path(d["path"], addr, opts))
+            r = get_path(d["path"], addr, opts)
+            s = ">".join(map(lambda x: str(x), r))
+            l.append(s)
+            p = ""
+            for d in r:
+                if p != "":
+                    graph_con.append((str(p), str(d)))
+                p = d
 
     # lから重複を削除する
     l = list(set(l))
+    graph_con = list(set(graph_con))
+
+    if opts.f_graph:
+        o = []
+        for d in graph_con:
+            o.append("->".join(list(d)))
+        print(",".join(o))
+        return()
 
     # 表示する
     for d in l:
@@ -47,7 +63,7 @@ def get_path(dat, addr, opts):
     # limit個までしか表示しない
     dat = dat[:int(opts.o_length)]
     # ">"でAS_PATHを結合する
-    return(">".join(map(lambda x: str(x), dat)))
+    return(dat)
 
 def del_uniq(dat):
     """
@@ -66,6 +82,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option("-l", "--length", dest="o_length", action="store", default="250")
     parser.add_option("-u", "--unique", dest="f_uniq", action="store_true", default=False)
+    parser.add_option("-g", "--graph", dest="f_graph", action="store_true", default=False)
     (options, args) = parser.parse_args()
     if len(args) != 1:
         sys.exit(1)
