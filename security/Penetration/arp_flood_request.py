@@ -5,7 +5,7 @@ from scapy.all import *
 import ipaddress
 
 
-targetnet = u"172.16.1.0/25"
+targetnet = u"192.168.1.0/24"
 
 liHosts = list(ipaddress.ip_network(targetnet).hosts())
 
