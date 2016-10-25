@@ -1,0 +1,28 @@
+vrf definition Mgmt-intf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+interface Loopback0
+ ip address 10.0.0.12 255.255.255.255
+ ip ospf cost 1
+ ipv6 address 2001:DB8::12/128
+ ospfv3 cost 1
+!
+interface Loopback1
+ ip address 10.10.0.13 255.255.255.255
+ ip ospf cost 1
+ ipv6 address 2001:DB8:0:10::12/128
+ ospfv3 cost 1
+!
+ip nat translation timeout 86400
+ip nat translation tcp-timeout 7440
+ip nat translation pptp-timeout 86400
+ip nat translation udp-timeout 300
+ip nat translation finrst-timeout 60
+ip nat translation syn-timeout 60
+ip nat translation dns-timeout 60
+ip nat translation icmp-timeout 60
