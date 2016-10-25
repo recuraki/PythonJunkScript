@@ -1,5 +1,7 @@
 *.pyc
+secret.py
 cover
 .coverage
 .cache
 .cache.*
+__pycache__
