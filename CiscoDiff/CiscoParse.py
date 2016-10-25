@@ -1,4 +1,5 @@
-#! env python
+#! env python3
+# -*- coding: utf-8 -*-
 
 from pprint import *
 import sys
@@ -102,6 +103,8 @@ class ConfigTree(object):
         pprint(self.diConfig, depth=10, indent=10)
 
     def updateRoutine(self, diConfig:dict, liLine: list):
+        if liLine == []:
+            return {}
         stElem = liLine[0]
         liChildElems = liLine[1:]
         if stElem not in diConfig:
@@ -157,17 +160,15 @@ class ConfigDiff(object):
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) == 2:
+    if len(args) == 3:
         f = open(args[1])
         CiscoTest1 = f.read()
         f.close()
         f = open(args[2])
         CiscoTest2 = f.read()
         f.close()
-    else:
-        liConfig = ParseText(CiscoTest1)
-        liConfig2 = ParseText(CiscoTest2)
-
+    liConfig = ParseText(CiscoTest1)
+    liConfig2 = ParseText(CiscoTest2)
     conf1 = ConfigTree()
     conf1.update(liConfig)
     conf2 = ConfigTree()
