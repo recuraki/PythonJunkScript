@@ -6,12 +6,30 @@
 # sudo apt-get install python3.5
 # wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
 # sudo python3.5 /tmp/get-pip.py
-# pip3.5 install pexpect
-
+# sudo pip3.5 install pexpect
+# sudo pip3.5 install PyYAML
 import asyncio
 import time
 import pexpect
 import sys
+import yaml
+
+sample_yaml="""
+global:
+ tftpserver: "192.168.196.99"
+nodes:
+ - name: "crs1k-1"
+   type: "iosxr"
+   spawn: "telnet 192.168.196.100"
+   loginuser: "name"
+   loginpass: "pass"
+ - name: "crs1k-1-clone"
+   type: "iosxr"
+   spawn: "telnet 192.168.196.100"
+   loginuser: "name"
+   loginpass: "pass"
+"""
+
 
 class CiscoIOSXE:
     p = None
@@ -21,7 +39,7 @@ class CiscoIOSXE:
     loginpass = None
     enablepass = None
     def __init__(self, spawn, name = "", loginuser =None,
-                 loginpass =None, enablepass=None):
+                 loginpass =None, enablepass=None, type = ""):
         self.p = pexpect.spawn(spawn, encoding="utf-8")
         self.p.logfile = sys.stdout
         self.name = name
@@ -85,18 +103,24 @@ class CiscoIOSXE:
 
 @asyncio.coroutine
 def func():
-    cors = [
-        c.tftpbackup("tftp://192.168.196.99/temp"),
-        c2.tftpbackup("tftp://192.168.196.99/temp"),
-    ]
     yield from asyncio.wait(cors)
 
-c = CiscoIOSXE("telnet 192.168.196.100", name="csr1", loginuser = "name", loginpass = "pass")
-c2 = CiscoIOSXE("telnet 192.168.196.100", name="csr1", loginuser = "name", loginpass = "pass")
-c.login()
 if __name__ == "__main__":
+    dat = yaml.load(sample_yaml)
+    argv = sys.argv
+    argc = len(argv)
+    if argc == 2:
+        fr = open(argv[1], "r")
+        y = fr.read()
+        dat = yaml.load(y)
+    cors = []
+    g = dat["global"]
+    for e in dat["nodes"]:
+        if e["type"] == "iosxr":
+            o = CiscoIOSXE(**e)
+        else:
+            continue
+        print(g)
+        cors.append(o.tftpbackup("tftp://" + g["tftpserver"] + "/" + e["name"]))
     loop = asyncio.get_event_loop()
     loop.run_until_complete(func())
-    
-
-
