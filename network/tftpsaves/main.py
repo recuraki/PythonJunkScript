@@ -18,6 +18,7 @@ import time
 import pexpect
 import sys
 import yaml
+from optparse import OptionParser
 
 sample_yaml="""
 global:
@@ -49,16 +50,14 @@ class CiscoIOSXE:
     loginuser = None
     loginpass = None
     enablepass = None
-    def __init__(self, spawn, name = "", loginuser =None,
-                 loginpass =None, enablepass=None, type = ""):
-        self.p = pexpect.spawn(spawn, encoding="utf-8")
+    def __init__(self, d):
+        self.p = pexpect.spawn(d["spawn"], encoding="utf-8")
         self.p.logfile = sys.stdout
-        self.name = name
-        self.loginuser = loginuser
-        self.loginpass = loginpass
-        self.enablepass = loginpass
-        if enablepass != None:
-            self.enablepass = enablepass
+        self.name = d["name"]
+        self.loginuser = d.get("loginuser", "")
+        self.loginpass = d.get("loginpass", "")
+        self.enablepass = d.get("loginpass", "")
+        self.enablepass = d.get("enablepass", self.enablepass)
         self.msg("INIT")
 
     @asyncio.coroutine
@@ -143,22 +142,64 @@ class CiscoIOSXE:
         return({"name": self.name, "status": "ok", "res": "", })
 
 
-if __name__ == "__main__":
-    dat = yaml.load(sample_yaml)
-    argv = sys.argv
-    argc = len(argv)
-    if argc == 2:
-        fr = open(argv[1], "r")
-        y = fr.read()
-        dat = yaml.load(y)
+def readYaml(dat, userdata):
     cors = []
+    # Global Configurationの読み込み
     g = dat["global"]
+    # 各ノード情報を上書き
     for e in dat["nodes"]:
-        if e["type"] == "iosxe":
-            o = CiscoIOSXE(**e)
+        # グローバル設定を優先して、情報を書き込み
+        d = g
+        d.update(e)
+        # ユーザ入力情報を差し込み
+        d.update(u)
+        # ノードごとの分岐
+        if d["type"] == "iosxe":
+            o = CiscoIOSXE(d)
         else:
             continue
-        cors.append(o.tftpbackup("tftp://" + g["tftpserver"] + "/" + e["name"]))
+
+        path = "tftp://" + g["tftpserver"] + "/"
+        path = path + d["destPrefix"] + d["name"] + d["destSuffix"] 
+        cors.append(o.tftpbackup(path))
+    return(cors)
+        
+def argParser():
+     arg = {}
+     parser = OptionParser()
+     parser.add_option("-c", "--CONFIG",
+                       dest="fn_config", default=None)
+     parser.add_option("-p", "--PREFIX",
+                       dest="destPrefix", default="")
+     parser.add_option("-s", "--SUFFIX",
+                       dest="destSuffix", default="")
+     (options, args) = parser.parse_args()
+     arg["fn_config"] = options.fn_config
+     arg["destPrefix"] = options.destPrefix
+     arg["destSuffix"] = options.destSuffix
+     return arg
+     
+
+fn_config = None
+
+dat = yaml.load(sample_yaml)
+if __name__ == "__main__":
+    u = argParser()
+
+    if u["fn_config"]:
+        fr = open(u["fn_config"], "r")
+        y = fr.read()
+        dat = yaml.load(y)
+
+    # Taskを登録する
+    cors = readYaml(dat, u)
     loop = asyncio.get_event_loop()
-    r = loop.run_until_complete(asyncio.gather(*cors))
-    print(r)
+    res = loop.run_until_complete(asyncio.gather(*cors))
+
+    print("")
+    for r in res:
+         if r["status"] == "ok":
+              print("{0}: DONE".format(r["name"]))
+         else:
+              print("{0}: Error {1}".format(r["name"], r["status"]))              
+
