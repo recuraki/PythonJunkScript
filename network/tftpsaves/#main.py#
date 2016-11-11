@@ -131,34 +131,13 @@ class CiscoIOSXE:
         self.p.sendline("")
 
         try:
-            i = yield from self.p.expect([self.prompt + "#", r"Permission denied", "Timed out"], async = True, timeout = 40)
+            i = yield from self.p.expect([self.prompt + "#", r"Permission denied"], async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         if i == 1:
-            return({"name": self.name, "status": "TFTPServer: Permission denied"  , "res": "", })
-        elif i == 2:
-            return({"name": self.name, "status": "TFTPServer: Timeout"  , "res": "", })
+            return({"name": self.name, "status": "TFTPServer: Permission denied"  , "res": "", })            
 
         self.p.sendline("logout")
         return({"name": self.name, "status": "ok", "res": "", })
-
-
-if __name__ == "__main__":
-    dat = yaml.load(sample_yaml)
-    argv = sys.argv
-    argc = len(argv)
-    if argc == 2:
-        fr = open(argv[1], "r")
-        y = fr.read()
-        dat = yaml.load(y)
-    cors = []
-    g = dat["global"]
-    for e in dat["nodes"]:
-        if e["type"] == "iosxe":
-            o = CiscoIOSXE(**e)
-        else:
-            continue
-        cors.append(o.tftpbackup("tftp://" + g["tftpserver"] + "/" + e["name"]))
-    loop = asyncio.get_event_loop()
-    r = loop.run_until_complete(asyncio.gather(*cors))
-    print(r)
+k:q
+kkkkkkkk!:
