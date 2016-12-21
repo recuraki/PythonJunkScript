@@ -62,11 +62,17 @@ class CiscoIOSXE:
 
     @asyncio.coroutine
     def login(self):
-        yield from self.p.expect("name: ", async=True)
+        try:
+            yield from self.p.expect("name: ", async=True)
+        except pexpect.exceptions.TIMEOUT as e:
+            raise e
+
         self.p.sendline(self.loginuser)
+
         yield from self.p.expect("word: ", async=True)
         self.p.sendline(self.loginpass)
-        i = yield from self.p.expect([r">", r"#", r"Authentication failed"],
+
+        i = yield from self.p.expect([r">", r"#", r"(Authentication failed|Login invalid)",],
                                  async=True)
         if i == 0:
             self.setPrompt(self.p.before.split("\n")[-1])
@@ -108,8 +114,10 @@ class CiscoIOSXE:
             return({"name": self.name, "status": "AuthError: " + e.value , "res": "", })
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
+        except pexpect.exceptions.TIMEOUT as e:
+            return({"name": self.name, "status": "Timeout"  , "res": "", })
 
-        try: 
+        try:
             yield from self.enable()
         except AuthError as e:
             return({"name": self.name, "status": "AuthError: " + e.value , "res": "", })
@@ -118,13 +126,13 @@ class CiscoIOSXE:
 
         self.p.sendline("copy running-config {0}".format(path))
         try:
-            yield from self.p.expect("remote host", async = True)
+            yield from self.p.expect("(remote host|Host name)", async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         self.p.sendline("")
 
         try:
-            yield from self.p.expect("filename", async = True)
+            yield from self.p.expect("(filename|file name)", async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         self.p.sendline("")
@@ -149,7 +157,7 @@ def readYaml(dat, userdata):
     # 各ノード情報を上書き
     for e in dat["nodes"]:
         # グローバル設定を優先して、情報を書き込み
-        d = g
+        d = g.copy()
         d.update(e)
         # ユーザ入力情報を差し込み
         d.update(u)
@@ -159,11 +167,11 @@ def readYaml(dat, userdata):
         else:
             continue
 
-        path = "tftp://" + g["tftpserver"] + "/"
-        path = path + d["destPrefix"] + d["name"] + d["destSuffix"] 
+        path = "tftp://" + d["tftpserver"] + "/"
+        path = path + d["destPrefix"] + d["name"] + d["destSuffix"]
         cors.append(o.tftpbackup(path))
     return(cors)
-        
+
 def argParser():
      arg = {}
      parser = OptionParser()
@@ -178,7 +186,7 @@ def argParser():
      arg["destPrefix"] = options.destPrefix
      arg["destSuffix"] = options.destSuffix
      return arg
-     
+
 
 fn_config = None
 
@@ -201,5 +209,4 @@ if __name__ == "__main__":
          if r["status"] == "ok":
               print("{0}: DONE".format(r["name"]))
          else:
-              print("{0}: Error {1}".format(r["name"], r["status"]))              
-
+              print("{0}: Error {1}".format(r["name"], r["status"]))
