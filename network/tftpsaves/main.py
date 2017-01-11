@@ -12,17 +12,23 @@
 # sudo python3.5 /tmp/get-pip.py
 # sudo pip3.5 install pexpect
 # sudo pip3.5 install PyYAML
-
+# sudo pip3.5 install requests
 import asyncio
 import time
 import pexpect
 import sys
 import yaml
+import requests
+import json
 from optparse import OptionParser
 
 sample_yaml="""
 global:
  tftpserver: "192.168.196.99"
+ slackmode: "error"
+ slackurl: "https://hooks.slack.com/services/xxx/xxx/xxx"
+ slackchannel: "#bot-notification"
+ slackusername: "tftpsan"
 nodes:
  - name: "crs1k-1"
    type: "iosxe"
@@ -171,6 +177,47 @@ def readYaml(dat, userdata):
         path = path + d["destPrefix"] + d["name"] + d["destSuffix"]
         cors.append(o.tftpbackup(path))
     return(cors)
+def doNotificationSlackCreatemsg(dat, res):
+    text = ""
+    if dat["global"]["slackmode"] == "all":
+         for r in res:
+              if r["status"] == "ok":
+                   text += "{0}:OK".format(r["name"]) + "\n"
+              else:
+                   text += "{0}:Error {1}".format(r["name"], r["status"]) + "\n"
+    if dat["global"]["slackmode"] == "error":
+         for r in res:
+              if r["status"] == "ok":
+                   pass
+              else:
+                   text += "{0}:Error {1}".format(r["name"], r["status"]) + "\n"
+    return(text)
+
+def doNotificationSlack(dat, res):
+    d = {
+     "text": "DEFAULT",
+     "username": 'tftpsave',
+     "icon_emoji":':grin:',
+     "channel":'#general',
+    }
+    if not "slackurl" in dat["global"]:
+         print("ERROR: no slackutl")
+         return
+    d["channel"] = dat["global"].get("slackchannel", '#general')
+    d["username"] = dat["global"].get("slackusername", 'tftpsave')
+    url = dat["global"]["slackurl"]
+    text = doNotificationSlackCreatemsg(dat, res)
+    if text == "":
+         print("aaa")
+         return
+    d["text"] = "TFTP PROCESS>>\n" + text
+    r = requests.post(url, data=json.dumps(d))
+
+
+
+def doNotification(dat, res):
+     if dat["global"].get("slackmode", "") in ("all", "error"):
+          doNotificationSlack(dat, res)
 
 def argParser():
      arg = {}
@@ -210,3 +257,4 @@ if __name__ == "__main__":
               print("{0}: DONE".format(r["name"]))
          else:
               print("{0}: Error {1}".format(r["name"], r["status"]))
+    doNotification(dat, res)
