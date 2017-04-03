@@ -1,10 +1,15 @@
-#!env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import sys
 import yaml
+from pprint import pprint
 
 TestServerYaml="""
+- local:
+  - host: "cisco1"
+  - ipaddrlo0: "192.168.255.1"
+
 - pattern: "hoge"
   res:
    - 
@@ -14,10 +19,15 @@ TestServerYaml="""
 - pattern: "hostname"
   res:
    -
-     - "host"
+     - "%{host}s"
+- pattern: "show version"
+  res:
+   -
+     - "%{host}s"
 """
 
+pprint(yaml.load(TestServerYaml))
 
-
-
-print(yaml.load(TestServerYaml))
+if __name__ == "__main__":
+  cfg = yaml.load(yamlstr)
+  
