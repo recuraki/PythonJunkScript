@@ -160,6 +160,13 @@ class ConfigDiff(object):
 
 if __name__ == "__main__":
     args = sys.argv
+    if len(args) == 2:
+        f = open(args[1])
+        CiscoTest1 = f.read()
+        f.close()
+        liConfig = ParseText(CiscoTest1)
+        conf1 = ConfigTree()
+        conf1.update(liConfig)
     if len(args) == 3:
         f = open(args[1])
         CiscoTest1 = f.read()
@@ -167,13 +174,13 @@ if __name__ == "__main__":
         f = open(args[2])
         CiscoTest2 = f.read()
         f.close()
-    liConfig = ParseText(CiscoTest1)
-    liConfig2 = ParseText(CiscoTest2)
-    conf1 = ConfigTree()
-    conf1.update(liConfig)
-    conf2 = ConfigTree()
-    conf2.update(liConfig2)
-    ConfigD = ConfigDiff(conf1, conf2)
-    ConfigD.diff()
+        liConfig = ParseText(CiscoTest1)
+        liConfig2 = ParseText(CiscoTest2)
+        conf1 = ConfigTree()
+        conf1.update(liConfig)
+        conf2 = ConfigTree()
+        conf2.update(liConfig2)
+        ConfigD = ConfigDiff(conf1, conf2)
+        ConfigD.diff()
 
 
