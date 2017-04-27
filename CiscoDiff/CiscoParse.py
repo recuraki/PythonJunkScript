@@ -46,7 +46,7 @@ def CountPrefixChars(target, line):
         return 0
 
 
-def ParseText(stText: str):
+def ParseText(stText: str, debug = False):
     """
     コンフィグテキストをパースする関数
     各行を「階層」とともにパースする
@@ -72,8 +72,9 @@ def ParseText(stText: str):
         liCur = ParseConf(line, liCur)
         # 戻りをコンフィグ一覧に追加
         liConfig.append(liCur)
-        print(liCur)
-    return liConfig
+        if debug:
+            print(liCur)
+    return liConfig, liCur
 
 def ParseConf(stLine: str, liPrev = []):
     # 新しい階層を調べる。これはスペースの数
@@ -96,11 +97,12 @@ class ConfigTree(object):
     def __init__(self):
         self.diConfig = {}
 
-    def update(self, liConfig: list):
+    def update(self, liConfig: list, debug = False):
         for stElem in liConfig:
             r = self.updateRoutine(self.diConfig, stElem)
             self.diConfig.update(r)
-        pprint(self.diConfig, depth=10, indent=10)
+        if debug:
+            pprint(self.diConfig, depth=10, indent=10)
 
     def updateRoutine(self, diConfig:dict, liLine: list):
         if liLine == []:
@@ -116,6 +118,8 @@ class ConfigTree(object):
 
     def getConfigDict(self):
         return self.diConfig
+
+
 
 def lineList2Strs(liLevel: list):
     s = ""
@@ -164,9 +168,10 @@ if __name__ == "__main__":
         f = open(args[1])
         CiscoTest1 = f.read()
         f.close()
-        liConfig = ParseText(CiscoTest1)
+        liConfig, liCur = ParseText(CiscoTest1)
         conf1 = ConfigTree()
         conf1.update(liConfig)
+
     if len(args) == 3:
         f = open(args[1])
         CiscoTest1 = f.read()
@@ -174,8 +179,8 @@ if __name__ == "__main__":
         f = open(args[2])
         CiscoTest2 = f.read()
         f.close()
-        liConfig = ParseText(CiscoTest1)
-        liConfig2 = ParseText(CiscoTest2)
+        liConfig, liCur1 = ParseText(CiscoTest1)
+        liConfig2, liCur2 = ParseText(CiscoTest2)
         conf1 = ConfigTree()
         conf1.update(liConfig)
         conf2 = ConfigTree()
