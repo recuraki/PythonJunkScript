@@ -12,13 +12,13 @@ local:
  ipaddrlo0: "192.168.255.1"
 
 patterns:
-  - pattern: "logout"
+  "logout":
     action: "exit"
-  - pattern: "hostname"
+  "hostname":
     res:
      -
        - "%{host}s"
-  - pattern: "show version"
+  "show version":
     res:
      -
        - "%{host}s"
@@ -48,10 +48,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         s = s.decode('utf-8')
         pprint(self.curBuffer)
         for p in self.curBuffer:
-            pprint(p)
-            m = re.search(p["pattern"], s)
+            m = re.search(p, s)
             if m:
-                print(m)
+                self.write("CMD: " + p)
+                self.doCmd(self.curBuffer[p])
                 return True
         self.write("command not found: " + s)
         return False
