@@ -15,19 +15,29 @@ patterns:
   "logout":
     action: "exit"
   "hostname":
+    action: "loop"
     res:
-     -
-       - "%{host}s"
+      - "{host}{aaa}"
   "show version":
     res:
-     -
-       - "%{host}s"
+      - "%{host}s"
+      - "end"
+  "show bgp neighbor (?P<neighbor>[0-9.]+)":
+    res:
+      - "{neighbor}"
+
+  "show (?P<foo>[0-9.]+) (?P<bar>[0-9.]+)":
+    res:
+      - "hello {foo}, {bar}"
+
 """
 
 pprint(yaml.load(TestServerYaml))
 HOST, PORT = "localhost", 10000
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
+    doexit = False
+    
     def handle(self):
         self.curBuffer = oracle
         while True:
@@ -37,11 +47,15 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 return
             print("TelnetRecv[{0}]: {1}".format( self.client_address[0], self.data))
             self.recvCmd(self.data)
+            if self.doexit:
+                print("session was deleted")
+                return
 
     def write(self, s):
         if isinstance(s, bytes):
             s = s.decode(s)
-        print("Write : {0}".format(s))
+        s = s + "\n"
+        print("{0}".format(s))
         self.request.sendall(s.encode("utf-8"))
 
     def recvCmd(self, s):
@@ -50,18 +64,36 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         for p in self.curBuffer:
             m = re.search(p, s)
             if m:
+                args = {}
+                for x in re.finditer("\?P<([^>]*)>", p):
+                    varname = x.groups()[0]
+                    args[varname] = m.group(varname)
                 self.write("CMD: " + p)
-                self.doCmd(self.curBuffer[p])
+                self.doCmd(p, self.curBuffer[p], args)
                 return True
         self.write("command not found: " + s)
-        return False
-    def doCmd(self, p):
-        pass
-        
+        return True
+    
+    def doCmd(self, key, p, args):
+        action = p.get("action", "loop")
+        if action == "exit":
+            self.doexit = True
+        elif action == "loop":
+            liStr = p.get("res", [])
+            curargs = val
+            curargs.update(args)
+            s = liStr[0].format(**curargs)
+            self.write(s)
+        elif action == "writebuffer":
+            liStr = p.get("res", [])
+            s = liStr[0]
+            p["res"] = liStr[1:]
+            self.write(s)
+            print(liStr)
+            self.curBuffer[key] = p
+            
 
         
-
-
 if __name__ == "__main__":
   cfg = yaml.load(TestServerYaml)
   val = cfg.get("local", {})
