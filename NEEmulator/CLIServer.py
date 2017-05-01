@@ -14,6 +14,7 @@ local:
 patterns:
   "logout":
     action: "exit"
+
   "hostname":
     action: "loop"
     res:
@@ -24,7 +25,8 @@ patterns:
       - "end"
   "show bgp neighbor (?P<neighbor>[0-9.]+)":
     res:
-      - "{neighbor}"
+      - "{neighbor} idle"
+      - "{neighbor} estab"
 
   "show (?P<foo>[0-9.]+) (?P<bar>[0-9.]+)":
     res:
@@ -32,13 +34,26 @@ patterns:
 
 """
 
+# 現在のYAMLを読み込んで辞書として表示
 pprint(yaml.load(TestServerYaml))
+
+# LISTENするポートなどの情報のデフォルト値
 HOST, PORT = "localhost", 10000
 
+
 class MyTCPHandler(socketserver.BaseRequestHandler):
+    """
+    telnet serverにおけるイベントハンドラ
+    """
     doexit = False
+
     
     def handle(self):
+        """
+        イベントハンドラ本体
+        Connectしたセッションはこれに捕まるので、抜けるときはexitする
+        :return:
+        """
         self.curBuffer = oracle
         while True:
             self.data = self.request.recv(1024)
