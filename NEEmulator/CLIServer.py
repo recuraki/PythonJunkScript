@@ -39,7 +39,6 @@ patterns:
 
 """
 
-<<<<<<< HEAD
 # debug用コード
 pprint(yaml.load(TestServerYaml))
 
@@ -48,17 +47,6 @@ HOST, PORT = "localhost", 10000
 
 # SOREUSEADDR
 socketserver.TCPServer.allow_reuse_address = True
-
-class MyTCPHandler(socketserver.BaseRequestHandler):
-    """
-    ハンドラ
-=======
-# 現在のYAMLを読み込んで辞書として表示
-pprint(yaml.load(TestServerYaml))
-
-# LISTENするポートなどの情報のデフォルト値
-HOST, PORT = "localhost", 10000
-
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     doexit = False
