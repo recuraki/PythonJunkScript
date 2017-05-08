@@ -7,6 +7,7 @@ from CiscoParse import ConfigDiff
 from pprint import pprint
 import optparse
 import yaml
+import copy
 
 TestCaseYaml="""
 add:
@@ -77,7 +78,7 @@ def conf2StrWrap(liData, liLevel = [], liRes = []):
     if isinstance(liData, dict):
         res = []
         for x in liData:
-            y = liLevel.copy()
+            y = copy.deepcopy(liLevel)
             y.append(x)
             ret, isEnd = conf2StrWrap(liData[x], y, liRes)
             if isEnd:
