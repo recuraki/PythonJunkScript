@@ -10,23 +10,9 @@ import yaml
 TestCaseYaml="""
 add:
   "interface Loopback0":
-    - "description loopback":
-    - "ip ospf cost 10":
-      - "hoge":
-    - "ip ospf cost 20":
-      - "hoge":
-    - "ip ospf cost 30":
-      - "hoge":
-        - "moge":
-  "interface Loopback1":
-    - "description loopback":
-    - "ip ospf cost 10":
-      - "hoge":
-    - "ip ospf cost 20":
-      - "hoge":
-    - "ip ospf cost 30":
-      - "hoge":
-        - "moge":
+    "desctiption loopback":
+  "ip nat translation timeout 600":
+del:
 """
 
 class CiscoContextualDiff(object):
@@ -50,35 +36,53 @@ class CiscoContextualDiff(object):
         self.deled = Tree1 - Tree2
         self.added = Tree2 - Tree1
     def dispdiff(self):
-        print("added: ")
+        print("--- added: ")
         pprint(self.added)
-        print("deled:")
+        print("--- deled:")
         pprint(self.deled)
+    def verify(self, seAdd, seDel):
+        res = True
+        if set(self.added - seAdd) != set():
+            print("EXTRA-ADD")
+            pprint(self.added - seAdd)
+            res = False
+        if set(seAdd - self.added) != set():
+            print("EXPECT ADD BUT NOT ADD")
+            pprint(seAdd - self.added)
+            res = False
+        if set(self.deled - seDel) != set():
+            print("EXTRA-DELETE")
+            pprint(self.deled - seDel)
+            res = False
+        if set(seDel - self.deled) != set():
+            print("EXPECT DELETE BUT NOT DELETE")
+            pprint(seDel - seDel)
+            res = False
+        return res
 
 def treeFromYaml(li, Curli = []):
     for x in li:
         Curli.append(x)
 
-def conf2Str(liData, liLevel = []):
-
+def conf2StrWrap(liData, liLevel = [], liRes = []):
     if isinstance(liData, dict):
         res = []
-
         for x in liData:
             y = liLevel.copy()
             y.append(x)
-            res.append(conf2Str(liData[x], y))
-        return res
+            ret, isEnd = conf2StrWrap(liData[x], y, liRes)
+            if isEnd:
+                liRes.append(ret)
+        return liRes, False
 
-    if isinstance(liData, list):
-        res = []
-        for x in liData:
-            res.append(conf2Str(x, liLevel)[0])
-        return (res)
+    elif liData == None:
+        return liLevel, True
 
-    if liData == None:
-        return(liLevel)
+    print("Unreach")
 
+def conf2Str(liData):
+    res,y = conf2StrWrap(liData)
+    return set([tuple(x) for x in res])
 
 if __name__ == "__main__":
     c = CiscoContextualDiff()
@@ -86,10 +90,15 @@ if __name__ == "__main__":
     c.dispdiff()
 
     cfg = yaml.load(TestCaseYaml)
-    pprint(cfg)
-    res = conf2Str(cfg["add"])
+    print("--- Will Add")
+    seWillAdd = conf2Str(cfg.get("add", ()))
+    pprint(seWillAdd)
+    print("--- Will Del")
+    seWillDel = conf2Str(cfg.get("del", ()))
+    pprint(seWillDel)
     print("---")
-    pprint(res)
+    c.verify(seWillAdd, seWillDel)
+
     #val = cfg.get("add", {})
     #pprint(val)
     #pprint(List2Str(val))

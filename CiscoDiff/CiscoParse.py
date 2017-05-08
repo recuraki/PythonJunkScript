@@ -89,7 +89,7 @@ def ParseConf(stLine: str, liPrev = []):
     if res is not None:
         return res
     else:
-        return []
+        return None
 
 class ConfigTree(object):
     diConfig = {}
