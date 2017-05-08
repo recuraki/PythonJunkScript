@@ -1,0 +1,5 @@
+add:
+del:
+  "interface Loopback0":
+    "shutdown":
+

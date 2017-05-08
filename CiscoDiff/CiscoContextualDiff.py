@@ -105,11 +105,17 @@ if __name__ == "__main__":
     fn_before = options.fn_before
     fn_after = options.fn_after
     fn_verify = options.fn_verify
+    print(fn_before)
+    print(fn_after)
 
     c = CiscoContextualDiff()
     c.load(fn_before, fn_after)
     c.dispdiff()
-    cfg = yaml.load(TestCaseYaml)
+    with open(fn_verify, 'r') as fp:
+        try:
+            cfg = yaml.load(fp)
+        except yaml.YAMLError as exc:
+            print(exc)
     print("--- Will Add")
     seWillAdd = conf2Str(cfg.get("add", ()))
     pprint(seWillAdd)

@@ -5,7 +5,7 @@ vrf definition Mgmt-intf
  exit-address-family
 !
 interface Loopback0
- desctiption loopback
+ description loopback
  ip address 10.0.0.12 255.255.255.255
  ip ospf cost 10
  ipv6 address 2001:DB8::12/128
