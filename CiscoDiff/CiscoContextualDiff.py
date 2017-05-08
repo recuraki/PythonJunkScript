@@ -5,6 +5,7 @@ from CiscoParse import ParseText
 from CiscoParse import ConfigTree
 from CiscoParse import ConfigDiff
 from pprint import pprint
+import optparse
 import yaml
 
 TestCaseYaml="""
@@ -28,6 +29,7 @@ class CiscoContextualDiff(object):
         self.C2 = f.read()
         f.close()
         self.parse()
+
     def parse(self):
         liConfig, liCur1 = ParseText(self.C1)
         liConfig2, liCur2 = ParseText(self.C2)
@@ -35,6 +37,7 @@ class CiscoContextualDiff(object):
         Tree2 = set([tuple(x) for x in liConfig2])
         self.deled = Tree1 - Tree2
         self.added = Tree2 - Tree1
+
     def dispdiff(self):
         print("--- added: ")
         pprint(self.added)
@@ -90,9 +93,20 @@ def conf2Str(liData):
     res,y = conf2StrWrap(liData)
     return set([tuple(x) for x in res])
 
+
+
 if __name__ == "__main__":
+    parser = optparse.OptionParser()
+    parser.add_option("-b", "--BEFOREFILE", dest="fn_before", default="sample_before")
+    parser.add_option("-a", "--AFTERFILE", dest="fn_after", default="sample_after")
+    parser.add_option("-v", "--VERIFYFILE", dest="fn_verify", default="sample_verify")
+    (options, args) = parser.parse_args()
+    fn_before = options.fn_before
+    fn_after = options.fn_after
+    fn_verify = options.fn_verify
+
     c = CiscoContextualDiff()
-    c.load("sample_before", "sample_after")
+    c.load(fn_before, fn_after)
     c.dispdiff()
     cfg = yaml.load(TestCaseYaml)
     print("--- Will Add")
