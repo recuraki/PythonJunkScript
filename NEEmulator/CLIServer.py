@@ -29,9 +29,14 @@ patterns:
   "show bgp neighbor (?P<neighbor>[0-9.]+)":
     action: "writebuffer"    
     res:
+<<<<<<< HEAD
       - ""
       - "{neighbor} idle"
       - "{neighbor} establish"
+=======
+      - "{neighbor} idle"
+      - "{neighbor} estab"
+>>>>>>> 9831d576a7727f296ba68b1e34139d0d16294f65
 
   "show (?P<foo>[0-9.]+) (?P<bar>[0-9.]+)":
     res:
@@ -39,6 +44,7 @@ patterns:
 
 """
 
+<<<<<<< HEAD
 # debug用コード
 pprint(yaml.load(TestServerYaml))
 
@@ -51,12 +57,31 @@ socketserver.TCPServer.allow_reuse_address = True
 class MyTCPHandler(socketserver.BaseRequestHandler):
     """
     ハンドラ
+=======
+# 現在のYAMLを読み込んで辞書として表示
+pprint(yaml.load(TestServerYaml))
+
+# LISTENするポートなどの情報のデフォルト値
+HOST, PORT = "localhost", 10000
+
+
+class MyTCPHandler(socketserver.BaseRequestHandler):
+    """
+    telnet serverにおけるイベントハンドラ
+>>>>>>> 9831d576a7727f296ba68b1e34139d0d16294f65
     """
     doexit = False
+
     
     def handle(self):
         """
+<<<<<<< HEAD
         受け付けた際のハンドラ
+=======
+        イベントハンドラ本体
+        Connectしたセッションはこれに捕まるので、抜けるときはexitする
+        :return:
+>>>>>>> 9831d576a7727f296ba68b1e34139d0d16294f65
         """
         self.curBuffer = oracle
         while True:
