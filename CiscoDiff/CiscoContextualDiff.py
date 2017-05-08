@@ -41,6 +41,12 @@ class CiscoContextualDiff(object):
         print("--- deled:")
         pprint(self.deled)
     def verify(self, seAdd, seDel):
+        """
+        入力した予期する差分とのdiffを取ります。
+        :param seAdd: 予期する追加されるべきコマンドセット
+        :param seDel: 予期する削除されるべきコマンドセット
+        :return: 
+        """
         res = True
         if set(self.added - seAdd) != set():
             print("EXTRA-ADD")
@@ -88,7 +94,6 @@ if __name__ == "__main__":
     c = CiscoContextualDiff()
     c.load("sample_before", "sample_after")
     c.dispdiff()
-
     cfg = yaml.load(TestCaseYaml)
     print("--- Will Add")
     seWillAdd = conf2Str(cfg.get("add", ()))
@@ -99,7 +104,3 @@ if __name__ == "__main__":
     print("---")
     c.verify(seWillAdd, seWillDel)
 
-    #val = cfg.get("add", {})
-    #pprint(val)
-    #pprint(List2Str(val))
-    #print(List2Str(["1", "b", "a"]))
