@@ -29,14 +29,9 @@ patterns:
   "show bgp neighbor (?P<neighbor>[0-9.]+)":
     action: "writebuffer"    
     res:
-<<<<<<< HEAD
       - ""
       - "{neighbor} idle"
       - "{neighbor} establish"
-=======
-      - "{neighbor} idle"
-      - "{neighbor} estab"
->>>>>>> 9831d576a7727f296ba68b1e34139d0d16294f65
 
   "show (?P<foo>[0-9.]+) (?P<bar>[0-9.]+)":
     res:
@@ -66,22 +61,12 @@ HOST, PORT = "localhost", 10000
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
-    """
-    telnet serverにおけるイベントハンドラ
->>>>>>> 9831d576a7727f296ba68b1e34139d0d16294f65
-    """
     doexit = False
-
-    
     def handle(self):
         """
-<<<<<<< HEAD
-        受け付けた際のハンドラ
-=======
         イベントハンドラ本体
         Connectしたセッションはこれに捕まるので、抜けるときはexitする
         :return:
->>>>>>> 9831d576a7727f296ba68b1e34139d0d16294f65
         """
         self.curBuffer = oracle
         while True:
@@ -109,29 +94,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             m = re.search(p, s)
             if m:
                 args = {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 for x in re.finditer("\?P<([^>]*)>", p):
                     varname = x.groups()[0]
                     args[varname] = m.group(varname)
