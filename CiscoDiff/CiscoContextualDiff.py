@@ -9,10 +9,24 @@ import yaml
 
 TestCaseYaml="""
 add:
- - "interface Loopback0":
-   - "description loopback"
-   - "ip ospf cost 10":
-     - "hoge"
+  "interface Loopback0":
+    - "description loopback":
+    - "ip ospf cost 10":
+      - "hoge":
+    - "ip ospf cost 20":
+      - "hoge":
+    - "ip ospf cost 30":
+      - "hoge":
+        - "moge":
+  "interface Loopback1":
+    - "description loopback":
+    - "ip ospf cost 10":
+      - "hoge":
+    - "ip ospf cost 20":
+      - "hoge":
+    - "ip ospf cost 30":
+      - "hoge":
+        - "moge":
 """
 
 class CiscoContextualDiff(object):
@@ -45,6 +59,26 @@ def treeFromYaml(li, Curli = []):
     for x in li:
         Curli.append(x)
 
+def conf2Str(liData, liLevel = []):
+
+    if isinstance(liData, dict):
+        res = []
+
+        for x in liData:
+            y = liLevel.copy()
+            y.append(x)
+            res.append(conf2Str(liData[x], y))
+        return res
+
+    if isinstance(liData, list):
+        res = []
+        for x in liData:
+            res.append(conf2Str(x, liLevel)[0])
+        return (res)
+
+    if liData == None:
+        return(liLevel)
+
 
 if __name__ == "__main__":
     c = CiscoContextualDiff()
@@ -52,6 +86,11 @@ if __name__ == "__main__":
     c.dispdiff()
 
     cfg = yaml.load(TestCaseYaml)
-    val = cfg.get("add", {})
-    pprint(val)
-
+    pprint(cfg)
+    res = conf2Str(cfg["add"])
+    print("---")
+    pprint(res)
+    #val = cfg.get("add", {})
+    #pprint(val)
+    #pprint(List2Str(val))
+    #print(List2Str(["1", "b", "a"]))
