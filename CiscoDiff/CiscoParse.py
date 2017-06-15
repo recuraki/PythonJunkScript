@@ -30,7 +30,7 @@ interface Loopback2
  """
 
 # コメントのみの行か判定
-isComment = lambda x: x.strip("\r\n ") == "!"
+isComment = lambda x: x.find("!") != -1
 
 def CountPrefixChars(target, line):
     """
