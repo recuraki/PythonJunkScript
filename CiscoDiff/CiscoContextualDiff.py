@@ -90,7 +90,10 @@ class CiscoContextualDiff(object):
             pprint(seDel - self.deled)
             res = False
         if res:
-            print("OK!")
+            print("OK: SAME CONFIG")
+        else:
+            print("!!!!!!!!! NG !!!!!!!!!")
+
         return res
 
     def generateDiff(self):
@@ -151,7 +154,9 @@ def conf2Str(liData):
     res,y = conf2StrWrap(liData)
     return set([tuple(x) for x in res])
 
-
+def dprint(o):
+    if f_verbose:
+        pprint(o)
 
 if __name__ == "__main__":
     parser = optparse.OptionParser()
@@ -160,6 +165,7 @@ if __name__ == "__main__":
     parser.add_option("-v", "--VERIFYFILE", dest="fn_verify", default="sample_verify")
     parser.add_option("-g", "--GENERATE", dest="f_creat", action="store_true")
     parser.add_option("-o", "--OUTPUT", dest="fn_creat", default = None)
+    parser.add_option("-d", "--DEBUG", dest="f_verbose", action="store_true")
 
 
     (options, args) = parser.parse_args()
@@ -167,22 +173,19 @@ if __name__ == "__main__":
     fn_after = options.fn_after
     fn_verify = options.fn_verify
     f_creat = options.f_creat
+    f_verbose = options.f_verbose
     fn_creat = options.fn_creat
 
     c = CiscoContextualDiff()
     c.load(fn_before, fn_after)
 
     #c.dispdiff()
-
-
     if f_creat:
         x = c.generateDiff()
         print(x)
         if fn_creat:
             with open(fn_creat, "w") as fw:
                 fw.write(x)
-
-
     else:
         with open(fn_verify, 'r') as fp:
             cfg = fp.read()
@@ -190,15 +193,15 @@ if __name__ == "__main__":
         p = CiscoLoadVerifyConfig()
         p.loadstr(cfg)
         p.parse()
+
         seWillAdd = p.getSetAdd()
         if seWillAdd != set():
-            print("--- Will Add")
-            pprint(seWillAdd)
+            dprint("--- Will Add")
+            dprint(seWillAdd)
         seWillDel = p.getSetDelete()
         if seWillDel != set():
-            print("--- Will Del")
-            pprint(seWillDel)
-
+            dprint("--- Will Del")
+            dprint(seWillDel)
         c.verify(seWillAdd, seWillDel)
 
 

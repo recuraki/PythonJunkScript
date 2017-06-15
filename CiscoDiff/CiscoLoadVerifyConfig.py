@@ -59,7 +59,6 @@ class CiscoLoadVerifyConfig(object):
         [add]と[delete]を切り出す
         :return:
         """
-        print(self.configStrAll)
         # [add]などの開始をとる
         posAddStart = self.configStrAll.find(self.sepAdd)
         posDeleteStart = self.configStrAll.find(self.sepDelete)
