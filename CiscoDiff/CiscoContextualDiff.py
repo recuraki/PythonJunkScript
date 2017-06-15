@@ -96,9 +96,13 @@ class CiscoContextualDiff(object):
     def generateDiff(self):
         stRes = ""
         stRes = stRes + "[add]" + "\n"
-        stRes = stRes +  "\n".join(self.generateDiffSub(self.added))
+        x = list(self.generateDiffSub(self.added))
+        x.sort()
+        stRes = stRes +  "\n".join(x) + "\n"
         stRes = stRes + "[delete]" + "\n"
-        stRes = stRes +  "\n".join(self.generateDiffSub(self.deled))
+        x = list(self.generateDiffSub(self.deled))
+        x.sort()
+        stRes = stRes +  "\n".join(x) + "\n"
         return(stRes)
 
     def generateDiffSub(self, seList:set):
