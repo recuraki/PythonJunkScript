@@ -9,6 +9,9 @@ import optparse
 import yaml
 import copy
 import sys
+import os
+import codecs
+from CiscoLoadVerifyConfig import CiscoLoadVerifyConfig
 
 TestCaseYaml="""
 add:
@@ -84,13 +87,26 @@ class CiscoContextualDiff(object):
             res = False
         if set(seDel - self.deled) != set():
             print("EXPECT DELETE BUT NOT DELETE")
-            pprint(seDel - seDel)
+            pprint(seDel - self.deled)
             res = False
+        if res:
+            print("OK!")
         return res
 
-    def creat(self):
-        set2diff(self.added)
+    def generateDiff(self):
+        stRes = ""
+        stRes = stRes + "[add]" + "\n"
+        stRes = stRes +  "\n".join(self.generateDiffSub(self.added))
+        stRes = stRes + "[delete]" + "\n"
+        stRes = stRes +  "\n".join(self.generateDiffSub(self.deled))
+        return(stRes)
 
+    def generateDiffSub(self, seList:set):
+        liRes = list()
+        for elem in seList:
+            elem = map(lambda x: x.strip(), elem)
+            liRes.append(",".join(elem))
+        return(liRes)
 
 
 def set2diff(seInput):
@@ -138,40 +154,47 @@ if __name__ == "__main__":
     parser.add_option("-b", "--BEFOREFILE", dest="fn_before", default="sample_before")
     parser.add_option("-a", "--AFTERFILE", dest="fn_after", default="sample_after")
     parser.add_option("-v", "--VERIFYFILE", dest="fn_verify", default="sample_verify")
-    parser.add_option("-c", "--CREAT", dest="f_creat", action="store_true")
+    parser.add_option("-g", "--GENERATE", dest="f_creat", action="store_true")
+    parser.add_option("-o", "--OUTPUT", dest="fn_creat", default = None)
+
+
     (options, args) = parser.parse_args()
     fn_before = options.fn_before
     fn_after = options.fn_after
     fn_verify = options.fn_verify
     f_creat = options.f_creat
+    fn_creat = options.fn_creat
 
-
-    if f_creat:
-        c = CiscoContextualDiff()
-        c.load(fn_before, fn_after)
-        c.creat()
-        sys.exit(1)
-        
-        
-        
     c = CiscoContextualDiff()
     c.load(fn_before, fn_after)
 
     #c.dispdiff()
 
-    with open(fn_verify, 'r') as fp:
-        try:
-            cfg = yaml.load(fp)
-        except yaml.YAMLError as exc:
-            print(exc)
 
-    print("--- Will Add")
-    seWillAdd = conf2Str(cfg.get("add", ()))
-    pprint(seWillAdd)
-    print("--- Will Del")
-    seWillDel = conf2Str(cfg.get("del", ()))
-    pprint(seWillDel)
-    print("---")
-    
-    c.verify(seWillAdd, seWillDel)
+    if f_creat:
+        x = c.generateDiff()
+        print(x)
+        if fn_creat:
+            with open(fn_creat, "w") as fw:
+                fw.write(x)
+
+
+    else:
+        with open(fn_verify, 'r') as fp:
+            cfg = fp.read()
+
+        p = CiscoLoadVerifyConfig()
+        p.loadstr(cfg)
+        p.parse()
+        seWillAdd = p.getSetAdd()
+        if seWillAdd != set():
+            print("--- Will Add")
+            pprint(seWillAdd)
+        seWillDel = p.getSetDelete()
+        if seWillDel != set():
+            print("--- Will Del")
+            pprint(seWillDel)
+
+        c.verify(seWillAdd, seWillDel)
+
 
