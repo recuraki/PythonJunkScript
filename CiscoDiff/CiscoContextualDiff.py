@@ -29,6 +29,13 @@ class CiscoContextualDiff(object):
     C2 = ""
     deled = set()
     added = set()
+    debug = False
+    def __init__(self, debug = False):
+        self.debug = debug
+
+    def dprint(self, s):
+        if self.debug:
+            pprint(s)
     
     def load(self, file1, file2):
         """
@@ -52,8 +59,11 @@ class CiscoContextualDiff(object):
         ここまでで一セット。
         :return:
         """
-        liConfig, liCur1 = ParseText(self.C1)
-        liConfig2, liCur2 = ParseText(self.C2)
+        self.dprint("Parse1")
+        liConfig = ParseText(self.C1, debug = self.debug)
+        self.dprint("Parse2")
+        liConfig2 = ParseText(self.C2, debug = self.debug)
+        self.dprint("Parse End")
         Tree1 = set([tuple(x) for x in liConfig])
         Tree2 = set([tuple(x) for x in liConfig2])
         self.deled = Tree1 - Tree2
@@ -176,7 +186,7 @@ if __name__ == "__main__":
     f_verbose = options.f_verbose
     fn_creat = options.fn_creat
 
-    c = CiscoContextualDiff()
+    c = CiscoContextualDiff(debug = f_verbose)
     c.load(fn_before, fn_after)
 
     #c.dispdiff()
