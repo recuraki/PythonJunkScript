@@ -92,11 +92,11 @@ def levelFind(l, liLine):
     curChar = 0
     curLevel = 0
     for x in liLine:
-        curChar = curChar + x["l"]
+        curChar = x["l"]
         if l <= curChar:
             return curLevel
         curLevel = curLevel + 1
-    return curLevel
+    return l
 
 
 def ParseConf(stLine: str, liPrev:list = []):
@@ -126,6 +126,7 @@ def ParseConf(stLine: str, liPrev:list = []):
     res = liPrev[:depthCurLevel]
     # パースに際して空白を除去
     stLine = stLine.strip()
+
 
     res.append({"s": stLine, "l": depthCharCount})
 
