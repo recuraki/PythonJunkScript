@@ -3,3 +3,9 @@ interface Loopback0
  ip ospf cost 1
  ipv6 address 2001:DB8::12/128
  ospfv3 cost 1
+interface Loopback1
+ ip address 10.0.0.13 255.255.255.255
+ ip ospf cost 1
+ ipv6 address 2001:DB8::13/128
+ ospfv3 cost 1
+interface Loopback3

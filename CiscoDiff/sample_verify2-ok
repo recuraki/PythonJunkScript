@@ -2,4 +2,6 @@ add:
 del:
   "interface Loopback0":
     "shutdown":
-
+  "interface Loopback2":
+  "interface Loopback2":
+    "shutdown":
