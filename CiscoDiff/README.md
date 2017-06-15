@@ -106,18 +106,3 @@ EXPECT DELETE BUT NOT DELETE
 !!!!!!!!! NG !!!!!!!!!
 ```
 
- - testファイルの書き方(YAML)
-
-テストファイルはYAML形式にて、それぞれaddとdelという辞書に
-予期するConfigの辞書を記載する。
-それぞれ階層的な辞書で記載する。
-「終わり」の階層においても空の辞書として定義する。
-
- ```
- add:
-   "interface Loopback0":
-     "desctiption loopback":
-   "ip nat translation timeout 600":
-＃del/addがない場合は空の辞書とすればよい
- del:
- ```
