@@ -8,6 +8,7 @@ from pprint import pprint
 import optparse
 import yaml
 import copy
+import sys
 
 TestCaseYaml="""
 add:
@@ -25,6 +26,7 @@ class CiscoContextualDiff(object):
     C2 = ""
     deled = set()
     added = set()
+    
     def load(self, file1, file2):
         """
         ファイルをロードする
@@ -59,6 +61,7 @@ class CiscoContextualDiff(object):
         pprint(self.added)
         print("--- deled:")
         pprint(self.deled)
+
     def verify(self, seAdd, seDel):
         """
         入力した予期する差分とのdiffを取ります。
@@ -84,6 +87,25 @@ class CiscoContextualDiff(object):
             pprint(seDel - seDel)
             res = False
         return res
+
+    def creat(self):
+        set2diff(self.added)
+
+
+
+def set2diff(seInput):
+    diRes = {}
+    for x in seInput:
+        diTmp = diRes
+        for y in x:
+            diCur = diTmp.get(y, {})
+            
+
+def listPack(liInput):
+    if len(liInput) == 0:
+        return None
+    return({liInput[0]: listPack(liInput[1:])})
+
 
 def treeFromYaml(li, Curli = []):
     for x in li:
@@ -116,21 +138,34 @@ if __name__ == "__main__":
     parser.add_option("-b", "--BEFOREFILE", dest="fn_before", default="sample_before")
     parser.add_option("-a", "--AFTERFILE", dest="fn_after", default="sample_after")
     parser.add_option("-v", "--VERIFYFILE", dest="fn_verify", default="sample_verify")
+    parser.add_option("-c", "--CREAT", dest="f_creat", action="store_true")
     (options, args) = parser.parse_args()
     fn_before = options.fn_before
     fn_after = options.fn_after
     fn_verify = options.fn_verify
-    print(fn_before)
-    print(fn_after)
+    f_creat = options.f_creat
 
+
+    if f_creat:
+        c = CiscoContextualDiff()
+        c.load(fn_before, fn_after)
+        c.creat()
+        sys.exit(1)
+        
+        
+        
     c = CiscoContextualDiff()
     c.load(fn_before, fn_after)
-    c.dispdiff()
+
+    #c.dispdiff()
+
     with open(fn_verify, 'r') as fp:
         try:
             cfg = yaml.load(fp)
         except yaml.YAMLError as exc:
             print(exc)
+
+    """
     print("--- Will Add")
     seWillAdd = conf2Str(cfg.get("add", ()))
     pprint(seWillAdd)
@@ -138,5 +173,7 @@ if __name__ == "__main__":
     seWillDel = conf2Str(cfg.get("del", ()))
     pprint(seWillDel)
     print("---")
+    """
+    
     c.verify(seWillAdd, seWillDel)
 
