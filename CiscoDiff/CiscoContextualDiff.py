@@ -18,11 +18,21 @@ del:
 """
 
 class CiscoContextualDiff(object):
+    """
+    Diffモジュール
+    """
     C1 = ""
     C2 = ""
     deled = set()
     added = set()
     def load(self, file1, file2):
+        """
+        ファイルをロードする
+        かつ、パースを開始
+        :param file1:
+        :param file2:
+        :return:
+        """
         f = open(file1)
         self.C1 = f.read()
         f.close()
@@ -32,6 +42,11 @@ class CiscoContextualDiff(object):
         self.parse()
 
     def parse(self):
+        """
+        読み込んだCiscoConfigを実際にパースする
+        ここまでで一セット。
+        :return:
+        """
         liConfig, liCur1 = ParseText(self.C1)
         liConfig2, liCur2 = ParseText(self.C2)
         Tree1 = set([tuple(x) for x in liConfig])
