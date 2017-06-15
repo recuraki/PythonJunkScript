@@ -165,7 +165,6 @@ if __name__ == "__main__":
         except yaml.YAMLError as exc:
             print(exc)
 
-    """
     print("--- Will Add")
     seWillAdd = conf2Str(cfg.get("add", ()))
     pprint(seWillAdd)
@@ -173,7 +172,6 @@ if __name__ == "__main__":
     seWillDel = conf2Str(cfg.get("del", ()))
     pprint(seWillDel)
     print("---")
-    """
     
     c.verify(seWillAdd, seWillDel)
 
