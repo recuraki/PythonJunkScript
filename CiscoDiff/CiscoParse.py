@@ -71,12 +71,14 @@ def ParseText(stText: str, debug = False):
         liCur = ParseConf(line, liPrev)
         # 戻りをコンフィグ一覧に追加
         liConfig.append(liCur)
-        if debug:
-            print("liCur" + str(liCur))
+        #if debug:
+            #print(liCur)
         liPrev = liCur
     #pprint(liConfig)
     liConfig = deleteLengthFromliConfig(liConfig)
-    #pprint(liConfig)
+    if debug:
+        for x in liConfig:
+            pprint(x)
     return liConfig
 
 def deleteLengthFromliConfig(liConfig):
