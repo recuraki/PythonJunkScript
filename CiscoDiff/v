@@ -1,0 +1,8 @@
+[add]
+interface Loopback0,ip ospf cost 1
+interface Loopback9
+[delete]
+interface Loopback2
+interface Loopback2,shutdown
+interface Loopback3,shutdown
+interface Loopback8

@@ -1,0 +1,8 @@
+interface Loopback0
+ ip address 10.0.0.12 255.255.255.255
+ ip ospf cost 1
+interface Loopback3
+interface Loopback4
+  shutdown
+interface Loopback5
+  description hoge

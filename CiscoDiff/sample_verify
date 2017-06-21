@@ -1,0 +1,5 @@
+add:
+  "interface Loopback0":
+    "desctiption loopback":
+  "ip nat translation timeout 600":
+del:

@@ -12,17 +12,23 @@
 # sudo python3.5 /tmp/get-pip.py
 # sudo pip3.5 install pexpect
 # sudo pip3.5 install PyYAML
-
+# sudo pip3.5 install requests
 import asyncio
 import time
 import pexpect
 import sys
 import yaml
+import requests
+import json
 from optparse import OptionParser
 
 sample_yaml="""
 global:
  tftpserver: "192.168.196.99"
+ slackmode: "error"
+ slackurl: "https://hooks.slack.com/services/xxx/xxx/xxx"
+ slackchannel: "#bot-notification"
+ slackusername: "tftpsan"
 nodes:
  - name: "crs1k-1"
    type: "iosxe"
@@ -62,11 +68,17 @@ class CiscoIOSXE:
 
     @asyncio.coroutine
     def login(self):
-        yield from self.p.expect("name: ", async=True)
+        try:
+            yield from self.p.expect("name: ", async=True)
+        except pexpect.exceptions.TIMEOUT as e:
+            raise e
+
         self.p.sendline(self.loginuser)
+
         yield from self.p.expect("word: ", async=True)
         self.p.sendline(self.loginpass)
-        i = yield from self.p.expect([r">", r"#", r"Authentication failed"],
+
+        i = yield from self.p.expect([r">", r"#", r"(Authentication failed|Login invalid)",],
                                  async=True)
         if i == 0:
             self.setPrompt(self.p.before.split("\n")[-1])
@@ -108,8 +120,10 @@ class CiscoIOSXE:
             return({"name": self.name, "status": "AuthError: " + e.value , "res": "", })
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
+        except pexpect.exceptions.TIMEOUT as e:
+            return({"name": self.name, "status": "Timeout"  , "res": "", })
 
-        try: 
+        try:
             yield from self.enable()
         except AuthError as e:
             return({"name": self.name, "status": "AuthError: " + e.value , "res": "", })
@@ -118,13 +132,13 @@ class CiscoIOSXE:
 
         self.p.sendline("copy running-config {0}".format(path))
         try:
-            yield from self.p.expect("remote host", async = True)
+            yield from self.p.expect("(remote host|Host name)", async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         self.p.sendline("")
 
         try:
-            yield from self.p.expect("filename", async = True)
+            yield from self.p.expect("(filename|file name)", async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         self.p.sendline("")
@@ -149,7 +163,7 @@ def readYaml(dat, userdata):
     # 各ノード情報を上書き
     for e in dat["nodes"]:
         # グローバル設定を優先して、情報を書き込み
-        d = g
+        d = g.copy()
         d.update(e)
         # ユーザ入力情報を差し込み
         d.update(u)
@@ -159,11 +173,52 @@ def readYaml(dat, userdata):
         else:
             continue
 
-        path = "tftp://" + g["tftpserver"] + "/"
-        path = path + d["destPrefix"] + d["name"] + d["destSuffix"] 
+        path = "tftp://" + d["tftpserver"] + "/"
+        path = path + d["destPrefix"] + d["name"] + d["destSuffix"]
         cors.append(o.tftpbackup(path))
     return(cors)
-        
+def doNotificationSlackCreatemsg(dat, res):
+    text = ""
+    if dat["global"]["slackmode"] == "all":
+         for r in res:
+              if r["status"] == "ok":
+                   text += "{0}:OK".format(r["name"]) + "\n"
+              else:
+                   text += "{0}:Error {1}".format(r["name"], r["status"]) + "\n"
+    if dat["global"]["slackmode"] == "error":
+         for r in res:
+              if r["status"] == "ok":
+                   pass
+              else:
+                   text += "{0}:Error {1}".format(r["name"], r["status"]) + "\n"
+    return(text)
+
+def doNotificationSlack(dat, res):
+    d = {
+     "text": "DEFAULT",
+     "username": 'tftpsave',
+     "icon_emoji":':grin:',
+     "channel":'#general',
+    }
+    if not "slackurl" in dat["global"]:
+         print("ERROR: no slackutl")
+         return
+    d["channel"] = dat["global"].get("slackchannel", '#general')
+    d["username"] = dat["global"].get("slackusername", 'tftpsave')
+    url = dat["global"]["slackurl"]
+    text = doNotificationSlackCreatemsg(dat, res)
+    if text == "":
+         print("aaa")
+         return
+    d["text"] = "TFTP PROCESS>>\n" + text
+    r = requests.post(url, data=json.dumps(d))
+
+
+
+def doNotification(dat, res):
+     if dat["global"].get("slackmode", "") in ("all", "error"):
+          doNotificationSlack(dat, res)
+
 def argParser():
      arg = {}
      parser = OptionParser()
@@ -178,7 +233,7 @@ def argParser():
      arg["destPrefix"] = options.destPrefix
      arg["destSuffix"] = options.destSuffix
      return arg
-     
+
 
 fn_config = None
 
@@ -201,5 +256,5 @@ if __name__ == "__main__":
          if r["status"] == "ok":
               print("{0}: DONE".format(r["name"]))
          else:
-              print("{0}: Error {1}".format(r["name"], r["status"]))              
-
+              print("{0}: Error {1}".format(r["name"], r["status"]))
+    doNotification(dat, res)

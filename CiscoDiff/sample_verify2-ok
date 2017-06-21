@@ -1,0 +1,7 @@
+[add]
+interface Looback200
+[delete]
+interface Loopback2
+interface Loopback2,shutdown
+interface Loopback3,shutdown
+interface Loopback5
