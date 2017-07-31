@@ -1,7 +1,9 @@
 [add]
-interface Looback200
+interface Loopback0 | ip ospf cost 1
+interface Loopback4
+interface Loopback4 | shutdown
 [delete]
+interface Loopback0 | ip ospf cost 10
 interface Loopback2
-interface Loopback2,shutdown
-interface Loopback3,shutdown
-interface Loopback5
+interface Loopback2 | shutdown
+interface Loopback3 | shutdown

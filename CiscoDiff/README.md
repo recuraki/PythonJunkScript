@@ -53,16 +53,17 @@ EXTRA-DELETE
 ```
 ./CiscoContextualDiff.py -b sample_before2 -a sample_after2 -g -o v
 [add]
-interface Loopback0,ip ospf cost 1
+interface Loopback0 | ip ospf cost 1
 interface Loopback4
-interface Loopback4,shutdown
+interface Loopback4 | shutdown
 [delete]
-interface Loopback0,ip ospf cost 10
+interface Loopback0 | ip ospf cost 10
 interface Loopback2
-interface Loopback2,shutdown
-interface Loopback3,shutdown
+interface Loopback2 | shutdown
+interface Loopback3 | shutdown
 ```
 このコマンドにより、先述のような差分を意味するテストファイルが生成される。
+この際、各階層構造は" | "で分割される。
 
 -gのみを指定すると、プログラムはテストファイル形式での差分を標準出力のみに出力する。
 
@@ -71,8 +72,8 @@ interface Loopback3,shutdown
 テストファイルは
 ```
 [addかdelete]
-階層1,階層2,...,階層n
-階層1,階層2,...,階層n
+階層1 | 階層2 | ... | 階層n
+階層1 | 階層2 | ... | 階層n
 ```
 のように書かれるべきである。このファイルを使って検証を行う。
 
@@ -81,18 +82,18 @@ interface Loopback3,shutdown
 OK: SAME CONFIG
 ```
 
-つぎに、上記のファイルからLoopback4とinterface Loopback0,ip ospf cost 10の行を恣意的に消して、
+つぎに、上記のファイルからLoopback4とinterface Loopback0 | ip ospf cost 10の行を恣意的に消して、
 Loopback8を削除、Loopback9を追加すべきだというように書き換える。
 
 ```
 [kanai@www:25756]cat v
 [add]
-interface Loopback0,ip ospf cost 1
+interface Loopback0 | ip ospf cost 1
 interface Loopback9
 [delete]
 interface Loopback2
-interface Loopback2,shutdown
-interface Loopback3,shutdown
+interface Loopback2 | shutdown
+interface Loopback3 | shutdown
 interface Loopback8
 [kanai@www:25757]./CiscoContextualDiff.py -b sample_before2 -a sample_after2 -v v
 EXTRA-ADD
