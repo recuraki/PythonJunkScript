@@ -122,7 +122,7 @@ class CiscoContextualDiff(object):
         liRes = list()
         for elem in seList:
             elem = map(lambda x: x.strip(), elem)
-            liRes.append(",".join(elem))
+            liRes.append(" | ".join(elem))
         return(liRes)
 
 

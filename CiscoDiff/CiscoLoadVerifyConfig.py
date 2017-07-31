@@ -48,7 +48,7 @@ class CiscoLoadVerifyConfig(object):
             if l == "":
                 continue
             liLine = []
-            for x in l.split(","):
+            for x in l.split(" | "):
                 liLine.append(x)
             liRes.append(tuple(liLine))
         return set(liRes)
