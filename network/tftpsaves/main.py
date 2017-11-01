@@ -1,10 +1,14 @@
 #!/usr/bin/python3.5
 # -*- coding: utf-8 -*-
 
+
+# pexpectはちゃんと非同期処理に対応していません。
 # 並列において以下のパッチが必要
 # https://github.com/pexpect/pexpect/pull/376/files#r78765769
 
+# そもそも、コルーチン系を使うにはPython3.5以上が必要になります。
 # Ubuntuの場合、以下のようにすること
+#
 # sudo add-apt-repository ppa:fkrull/deadsnakes
 # sudo apt-get update
 # sudo apt-get install python3.5
@@ -13,6 +17,8 @@
 # sudo pip3.5 install pexpect
 # sudo pip3.5 install PyYAML
 # sudo pip3.5 install requests
+#
+
 import asyncio
 import time
 import pexpect
@@ -22,6 +28,7 @@ import requests
 import json
 from optparse import OptionParser
 
+# サンプル用のテストConfig
 sample_yaml="""
 global:
  tftpserver: "192.168.196.99"
@@ -42,6 +49,7 @@ nodes:
    loginpass: "pass"
 """
 
+##### 例外 #######
 class AuthError(Exception):
      def __init__(self, value):
          self.value = value
@@ -49,6 +57,7 @@ class AuthError(Exception):
          return repr(self.value)
 
 
+##### IOS-XE向けモジュール #######
 class CiscoIOSXE:
     p = None
     name = ""
@@ -66,6 +75,16 @@ class CiscoIOSXE:
         self.enablepass = d.get("enablepass", self.enablepass)
         self.msg("INIT")
 
+    # モジュール内ではnoticeをmsg()にて送る。非同期処理のため、頭につけるのを
+    # setPromptで行う
+    def setPrompt(self, prompt):
+        self.msg("set PROMPT: {0}".format(prompt))
+        self.prompt = prompt
+
+    def msg(self, msg):
+        print("[{0}]: {1}".format(self.name, msg))
+
+　　# 非同期 login
     @asyncio.coroutine
     def login(self):
         try:
@@ -88,6 +107,7 @@ class CiscoIOSXE:
         elif i == 2:
             raise AuthError("login")
 
+    # enableに入る
     @asyncio.coroutine
     def enable(self):
         self.msg("enable P:")
@@ -105,44 +125,49 @@ class CiscoIOSXE:
             raise AuthError("enable")
         self.msg("enable ok")
 
-    def setPrompt(self, prompt):
-        self.msg("set PROMPT: {0}".format(prompt))
-        self.prompt = prompt
-
-    def msg(self, msg):
-        print("[{0}]: {1}".format(self.name, msg))
-
+    # [コマンド処理]
+    # @path: tftp://..../... の形式で入れる
     @asyncio.coroutine
     def tftpbackup(self, path):
+        # ログイン
         try:
             yield from self.login()
-        except AuthError as e:
+        except AuthError as e: # 認証拒否
             return({"name": self.name, "status": "AuthError: " + e.value , "res": "", })
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         except pexpect.exceptions.TIMEOUT as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
 
+        # enable
         try:
             yield from self.enable()
-        except AuthError as e:
+        except AuthError as e: # 拒否
             return({"name": self.name, "status": "AuthError: " + e.value , "res": "", })
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
 
+        # 同期: コマンドの実行
         self.p.sendline("copy running-config {0}".format(path))
+
+        # HostName?をまつ -> そのままエンター
         try:
             yield from self.p.expect("(remote host|Host name)", async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         self.p.sendline("")
 
+        # FileName?を待つ -> そのままエンター
         try:
             yield from self.p.expect("(filename|file name)", async = True)
         except pexpect.exceptions.EOF as e:
             return({"name": self.name, "status": "Timeout"  , "res": "", })
         self.p.sendline("")
 
+        # 実施結果の確認
+        # 0: プロンプトが帰ってきた＝成功
+        # 1: Permission denied
+        # 2: タイムアウト
         try:
             i = yield from self.p.expect([self.prompt + "#", r"Permission denied", "Timed out"], async = True, timeout = 40)
         except pexpect.exceptions.EOF as e:
@@ -152,10 +177,14 @@ class CiscoIOSXE:
         elif i == 2:
             return({"name": self.name, "status": "TFTPServer: Timeout"  , "res": "", })
 
+        # 後処理
         self.p.sendline("logout")
+
+        # 結果の記録
         return({"name": self.name, "status": "ok", "res": "", })
 
 
+# これ、registTaskとした方がいいかも
 def readYaml(dat, userdata):
     cors = []
     # Global Configurationの読み込み
@@ -172,11 +201,15 @@ def readYaml(dat, userdata):
             o = CiscoIOSXE(d)
         else:
             continue
-
         path = "tftp://" + d["tftpserver"] + "/"
         path = path + d["destPrefix"] + d["name"] + d["destSuffix"]
+        # ここで、こっそり、taskを積み込んでいる
         cors.append(o.tftpbackup(path))
     return(cors)
+
+# Slack通知のメッセージ作成
+# slackmode = all だったら実施のたびにログを出す
+# slackmode = error の時はエラーだけしか返さない
 def doNotificationSlackCreatemsg(dat, res):
     text = ""
     if dat["global"]["slackmode"] == "all":
@@ -193,6 +226,7 @@ def doNotificationSlackCreatemsg(dat, res):
                    text += "{0}:Error {1}".format(r["name"], r["status"]) + "\n"
     return(text)
 
+# Slack通知を行う
 def doNotificationSlack(dat, res):
     d = {
      "text": "DEFAULT",
@@ -215,10 +249,12 @@ def doNotificationSlack(dat, res):
 
 
 
+# 実施結果の通知を行う(今はslackだけ)
 def doNotification(dat, res):
      if dat["global"].get("slackmode", "") in ("all", "error"):
           doNotificationSlack(dat, res)
 
+# 変数のパース
 def argParser():
      arg = {}
      parser = OptionParser()
@@ -247,8 +283,10 @@ if __name__ == "__main__":
         dat = yaml.load(y)
 
     # Taskを登録する
+    # corsには[func, func, func...]が積まれている
     cors = readYaml(dat, u)
     loop = asyncio.get_event_loop()
+    # ここで非同期タスクを同期にする(runして、全ての完了を待つ)
     res = loop.run_until_complete(asyncio.gather(*cors))
 
     print("")
@@ -257,4 +295,5 @@ if __name__ == "__main__":
               print("{0}: DONE".format(r["name"]))
          else:
               print("{0}: Error {1}".format(r["name"], r["status"]))
+
     doNotification(dat, res)
