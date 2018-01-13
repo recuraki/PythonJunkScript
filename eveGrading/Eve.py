@@ -78,12 +78,17 @@ class Eve():
     def disconnect(self):
         pass
 
-    def parse_nodelist2port(self, data):
+    def parse_nodelist2port(self, data, statusFilter = None):
         # 取得したノード一覧をnodename : portに変換する補助関数
         allnodes = data["data"]
         nodes = {}
         for id in allnodes:
             node = allnodes[id]
+
+            # statusFilterが指定されている場合、そのstatusだけを処理する
+            if statusFilter is not None:
+                if node.get("status", None) != statusFilter:
+                    continue
             hostname = node["name"]
             port = node.get("url", "").split(":")[2]
             nodes[hostname] = port
