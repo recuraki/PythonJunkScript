@@ -42,7 +42,10 @@ class TelnetCheckConfig():
         #telnetする
         self.t = Telnet(host, port=port)
         # login直後のやさしさ(telnetからの応答を一つよみこむ
-        (index, reobj, res) = self.t.expect([self.expectuntil])
+        (index, reobj, res) = self.t.expect([self.expectuntil], timeout = 1)
+        if index == -1:
+            return -1
+
         # 0x0aは最悪、show runとかで--more--してても抜けられる
         self.t.write(b"\r\n")
         # \r\nを送った場合、1回ダミーの設定のexpectを入れる
@@ -151,6 +154,15 @@ class TelnetCheckConfig():
             self.write("")
             res.append((name, is_pass))
         return (self.promptName, final_pass, res)
+
+    def showRun(self, ipaddr, port, prompt, timeout = 5):
+        r = self.connect(ipaddr, port, prompt)
+        if r == -1:
+            return (-1, None, "")
+        self.t.write("show run".encode("ascii") + b"\n")
+        (index, reobj, res) = self.t.expect([self.expectuntil + "#".encode("ascii")], timeout)
+        # timeoutの時は、reobj = None, index = -1で返ります
+        return(index, reobj, res.decode("utf-8"))
 
     def writeResult(self, result):
             """
