@@ -23,7 +23,7 @@ class TelnetCheckConfig():
         if self.debug == True:
             print(d)
 
-    def connect(self, host, port, expectuntil:str, enablePass = "cisco"):
+    def connect(self, host, port, expectuntil, enablePass = "cisco"):
         """
         Ciscoノードへの接続
         :param host:
@@ -67,7 +67,7 @@ class TelnetCheckConfig():
         self.write("no logg con", rough=True)
         self.write("end")
 
-    def write(self, cmd:str, rough= False):
+    def write(self, cmd, rough= False):
         """
         :param cmd:
         :param rough: Trueならホスト名だけで次に行く.Falseならenableモードか確認する
@@ -82,7 +82,7 @@ class TelnetCheckConfig():
         (index, reobj, res) = self.t.expect([waitWord])
         #self.dp("recv: {0}".format(res.decode("utf-8")))
 
-    def do_singletest(self, cmd:str, p = [], n = []):
+    def do_singletest(self, cmd, p = [], n = []):
         """
         :param cmd: これを実施する
         :param p: 含まれるべき文字列
@@ -131,7 +131,7 @@ class TelnetCheckConfig():
         self.write("end")
         self.t.close()
 
-    def test(self, diTests:dict):
+    def test(self, diTests):
         res = []
         ipaddr = diTests.get("ipaddr", "127.0.0.1")
         port = diTests.get("port", "23")
@@ -152,24 +152,24 @@ class TelnetCheckConfig():
             res.append((name, is_pass))
         return (self.promptName, final_pass, res)
 
-    def writeResult(self, result: list):
-        """
-        最終結果のコンソールへの表示
-        :param result:
-        :return:
-        """
-        self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        finalResult = True
-        for name, is_pass in result:
-            s = "PASS" if is_pass else "FAIL"
-            finalResult = finalResult and is_pass
-            self.write("! [{0}]: {1}".format(s, name))
-        self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        self.write("! FINAL RESULT [{0}]".format("PASS" if finalResult else "FAIL"))
+    def writeResult(self, result):
+            """
+            最終結果のコンソールへの表示
+            :param result:
+            :return:
+            """
+            self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            finalResult = True
+            for name, is_pass in result:
+                s = "PASS" if is_pass else "FAIL"
+                finalResult = finalResult and is_pass
+                self.write("! [{0}]: {1}".format(s, name))
+            self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            self.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            self.write("! FINAL RESULT [{0}]".format("PASS" if finalResult else "FAIL"))
 
-    def writeResult2stdout(self, result: list):
+    def writeResult2stdout(self, result):
         """
         最終結果のターミナルへの表示
         :param result:

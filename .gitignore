@@ -5,3 +5,4 @@ cover
 .cache
 .cache.*
 __pycache__
+eveGrading/scenario/
