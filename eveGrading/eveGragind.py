@@ -90,16 +90,29 @@ if __name__ == "__main__":
     # 引数の処理
     args = argParser()
 
-    # 条件: evehostが指定されていること
-    if args["stHost"] is None:
+    # 設定ファイルを読み込む
+    try:
+        with open("eveDefault.yaml", "r+") as fp:
+            defaultValue = yaml.load(fp)
+            fp.close()
+    except FileNotFoundError:
+        print("eveDefault.yaml is not found")
+        defaultValue = {}
+
+    # evehostの読み込み(defaultに設定があるならそこから読み込む
+    evehost = defaultValue.get("evehost", None)
+    if args["stHost"] is not None:
+        evehost = args["stHost"]
+    if evehost is None:
         pprint("NEED: -e <evehost>")
         sys.exit(-1)
-    evehost = args["stHost"]
+    pprint("EVE HOSTADDR = " + evehost)
+
 
     # 条件: fileがdirが指定されていること
     if args["stFilename"] is None:
         pprint("NEED: -f <yaml>")
-        sys.exit(-1)
+        #sys.exit(-1)
     stFilename = args["stFilename"]
 
     # eveホストに接続し、mappingリスト及び、開くべきlab nameを取得する
