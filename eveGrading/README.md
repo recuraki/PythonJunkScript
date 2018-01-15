@@ -9,6 +9,10 @@
  pip3 install PyYAML
 
 
+FYI: support Japanese on eve-env 
+ sudo apt-get install language-pack-ja
+ sudo update-locale LANG=ja_JP.UTF-8
+
 使い方
 ---
 
