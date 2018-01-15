@@ -5,20 +5,25 @@
 
 準備
 ---
+```
  apt-get install python3-pip python3.5  
  pip3 install PyYAML
-
+```
 
 FYI: support Japanese on eve-env 
+```
  sudo apt-get install language-pack-ja
  sudo update-locale LANG=ja_JP.UTF-8
+```
 
 使い方
 ---
 
+```
 python3.5 ./eveGragind.py -e <ipaddr> -f <YAML/dir>
 - -e <ipaddr>: 必須
 - -f <YAML filename>: 必須 検査対象yamlあるいはディレクトリ
+```
 
 シナリオの記載に関する注意:
 ---
@@ -47,3 +52,27 @@ python3.5 ./eveGragind.py -e <ipaddr> -f <YAML/dir>
      "notinclude": # どれかでも含まれてはいけない文字列
        - "receive capability: advertised"
 ```
+
+eveConfigDump.py
+---
+このプログラムは、現在eveで開かれているLabのすべてのCisco機器のノードにログインし、
+show runの内容をディレクトリにhostnameとして保存します。
+
+
+```
+python3.5 ./eveConfigDump.py -e <ipaddr> -d <dir> -m <mappingfile>
+- -e <ipaddr>: 必須
+- -d <dir>: ファイルを保存する対象ディレクトリ
+- -m <mappingfile YAML>: ホスト名、プロンプトのマッピング。
+```
+
+-dで保存先のディレクトリを指定してください。ディレクトリが存在しない場合、勝手に作成されます。
+また、eveDefault.yamlにdirDumpToとして記載しておくことで、basepathを指定することができます。basepathが指定されている場合、このプログラムはそのディレクトリ内にhostnameとしてconfigを保存しますし、
+さらに-dオプションで指定することでそのフォルダに中にファイルを作成します。
+
+尚、mappingfileにホスト名とプロンプトの紐づけを書くことができます。
+例えば、R1というeveのホスト名だが、実際のプロンプトはRouter#の時、
+"R1": "Router"というマッピングを記載することで、このプロンプトを待つことになります。
+加えて、このマッピングの中でNoneに指定することでそのノードからのコンフィグ取得をやめます。
+このサンプルはhost-prompt.yamlにあります。
+
