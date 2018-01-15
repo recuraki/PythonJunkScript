@@ -161,7 +161,7 @@ class TelnetCheckConfig():
             return (-1, None, "")
         self.t.write("show run |  exclude Last conf|Current c|Building".encode("ascii") + b"\n")
         (index, reobj, res) = self.t.expect([self.expectuntil + "#".encode("ascii")], timeout = 3)
-        pprint(res)
+        #pprint(res)
         # timeoutの時は、reobj = None, index = -1で返ります
         return(index, reobj, res.decode("utf-8"))
 
