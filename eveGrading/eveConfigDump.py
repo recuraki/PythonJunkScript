@@ -20,9 +20,12 @@ def argParser():
                       dest="stFilename", default=None)
     parser.add_option("-e", "--eve",
                       dest="stHost", default=None)
+    parser.add_option("-m", "--mapping",
+                      dest="stMapping", default=None)
     (options, args) = parser.parse_args()
     arg["stFilename"] = options.stFilename
     arg["stHost"] = options.stHost
+    arg["stMapping"] = options.stMapping
     return arg
 
 if __name__ == "__main__":
@@ -53,14 +56,15 @@ if __name__ == "__main__":
         pprint("Create: " + str(savepath))
         savepath.mkdir()
 
-
+    mappingFile = defaultValue.get("mappingFile", "host-prompt.yaml")
+    if args["stMapping"] is not None:
+        mappingFile = args["stHost"]
     try:
-        with open("host-prompt.yaml", "r+") as fp:
+        with open(mappingFile, "r+") as fp:
             promptMapping = yaml.load(fp)
     except FileNotFoundError:
         promptMapping = {}
-        print ("host-prompt.yaml is not found: NOMAPPING")
-
+        print ("{0} is not found: NOMAPPING".format(mappingFile))
 
     # eveホストに接続し、mappingリスト及び、開くべきlab nameを取得する
     e = Eve(evehost)
@@ -73,7 +77,7 @@ if __name__ == "__main__":
         prompt = promptMapping.get(hostname, hostname)
         if prompt == None:
             continue
-        print("Try: " + hostname)
+        print("Try: " + hostname + " (Prompt:{0})".format(prompt))
         port = mappingList[hostname]
         tcc = TelnetCheckConfig(debug=False)
         index, pat, res = tcc.showRun(evehost, port, prompt, timeout=3)
