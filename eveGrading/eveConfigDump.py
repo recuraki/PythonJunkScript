@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     mappingFile = defaultValue.get("mappingFile", "host-prompt.yaml")
     if args["stMapping"] is not None:
-        mappingFile = args["stHost"]
+        mappingFile = args["stMapping"]
     try:
         with open(mappingFile, "r+") as fp:
             promptMapping = yaml.load(fp)
@@ -76,6 +76,7 @@ if __name__ == "__main__":
     for hostname in mappingList:
         prompt = promptMapping.get(hostname, hostname)
         if prompt == None:
+            print("SKIP: " + hostname)
             continue
         print("Try: " + hostname + " (Prompt:{0})".format(prompt))
         port = mappingList[hostname]
@@ -90,6 +91,5 @@ if __name__ == "__main__":
                 contents = "\n".join(contents[2:-2])
                 fw.write(contents)
                 fw.close()
-            
         else:
             print ("FAIL: PROMPT LOST")
