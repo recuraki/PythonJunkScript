@@ -160,11 +160,8 @@ class TelnetCheckConfig():
         if r == -1:
             return (-1, None, "")
         self.t.write("show run |  exclude Last conf|Current c|Building".encode("ascii") + b"\n")
-        pprint("go")
-        pprint("until"+  self.expectuntil.decode("utf-8"))
-        (index, reobj, res) = self.t.expect([self.expectuntil + "#".encode("ascii")])
+        (index, reobj, res) = self.t.expect([self.expectuntil + "#".encode("ascii")], timeout = 3)
         pprint(res)
-        pprint("done")
         # timeoutの時は、reobj = None, index = -1で返ります
         return(index, reobj, res.decode("utf-8"))
 

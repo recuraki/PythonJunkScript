@@ -7,6 +7,7 @@ from pprint import pprint
 import os
 import sys
 from optparse import OptionParser
+from pathlib import Path
 
 def argParser():
     """
@@ -15,7 +16,7 @@ def argParser():
     """
     arg = {}
     parser = OptionParser()
-    parser.add_option("-f", "--file",
+    parser.add_option("-d", "--dir",
                       dest="stFilename", default=None)
     parser.add_option("-e", "--eve",
                       dest="stHost", default=None)
@@ -45,11 +46,13 @@ if __name__ == "__main__":
         pprint("NEED: -e <evehost>")
         sys.exit(-1)
 
-    # 条件: fileがdirが指定されていること
-    if args["stFilename"] is None:
-        pprint("NEED: -f <yaml>")
-        #sys.exit(-1)
-    stFilename = args["stFilename"]
+    basepath = defaultValue.get("dirDumpTo", "./")
+    subdir = "" if args["stFilename"] is None else args["stFilename"]
+    savepath = Path(basepath) / Path(subdir)
+    if savepath.exists() == False:
+        pprint("Create: " + str(savepath))
+        savepath.mkdir()
+
 
     try:
         with open("host-prompt.yaml", "r+") as fp:
@@ -66,21 +69,23 @@ if __name__ == "__main__":
 
     mappingList = e.parse_nodelist2port(d, statusFilter=2)
 
-    pprint("target host and port...")
-    pprint(mappingList)
     for hostname in mappingList:
         prompt = promptMapping.get(hostname, hostname)
         if prompt == None:
             continue
+        print("Try: " + hostname)
         port = mappingList[hostname]
         tcc = TelnetCheckConfig(debug=False)
-        print ("dump conf: " + hostname)
         index, pat, res = tcc.showRun(evehost, port, prompt, timeout=3)
-        #pprint(evehost)
-        #pprint(port)
-        #pprint(hostname)
-        pprint(index)
         if pat != None:
-            print(" PASS:")
+            fn = savepath / Path(hostname)
+            print(" PASS: save to " + str(fn))
+            with fn.open(mode = "w", encoding = "utf-8") as fw:
+                # first 2 lines and last 2 lines will be snip :p
+                contents = res.split("\n")
+                contents = "\n".join(contents[2:-2])
+                fw.write(contents)
+                fw.close()
+            
         else:
             print ("FAIL: PROMPT LOST")
