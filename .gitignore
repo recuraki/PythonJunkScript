@@ -6,3 +6,4 @@ cover
 .cache.*
 __pycache__
 eveGrading/scenario/
+*.swp
