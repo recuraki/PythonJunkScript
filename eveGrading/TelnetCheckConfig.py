@@ -159,7 +159,7 @@ class TelnetCheckConfig():
         r = self.connect(ipaddr, port, prompt)
         if r == -1:
             return (-1, None, "")
-        self.t.write("show run".encode("ascii") + b"\n")
+        self.t.write("show run |  exclude Last conf|Current c|Building".encode("ascii") + b"\n")
         pprint("go")
         pprint("until"+  self.expectuntil.decode("utf-8"))
         (index, reobj, res) = self.t.expect([self.expectuntil + "#".encode("ascii")])
