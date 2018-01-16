@@ -83,7 +83,7 @@ if __name__ == "__main__":
         tcc = TelnetCheckConfig(debug=False)
         index, pat, res = tcc.showRun(evehost, port, prompt, timeout=3)
         if pat != None:
-            fn = savepath / Path(hostname)
+            fn = savepath / Path(hostname+".txt")
             print(" PASS: save to " + str(fn))
             with fn.open(mode = "w", encoding = "utf-8") as fw:
                 # first 2 lines and last 2 lines will be snip :p
