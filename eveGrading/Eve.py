@@ -89,6 +89,9 @@ class Eve():
             if statusFilter is not None:
                 if node.get("status", None) != statusFilter:
                     continue
+            # imageが空の場合スキップする。
+            if node.get("image", None) == "":
+                continue
             hostname = node["name"]
             port = node.get("url", "").split(":")[2]
             nodes[hostname] = port
