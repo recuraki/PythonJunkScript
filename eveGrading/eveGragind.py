@@ -81,9 +81,12 @@ def argParser():
                       dest="stFilename", default=None)
     parser.add_option("-e", "--eve",
                       dest="stHost", default=None)
+    parser.add_option("-d", "--debug",
+                      dest="isDebug",  action="store_true")
     (options, args) = parser.parse_args()
     arg["stFilename"] = options.stFilename
     arg["stHost"] = options.stHost
+    arg["isDebug"] = options.isDebug
     return arg
 
 if __name__ == "__main__":
@@ -98,6 +101,10 @@ if __name__ == "__main__":
     except FileNotFoundError:
         print("eveDefault.yaml is not found")
         defaultValue = {}
+
+    isDebug = False
+    if args["isDebug"] == True:
+        isDebug = True
 
     # evehostの読み込み(defaultに設定があるならそこから読み込む
     evehost = defaultValue.get("evehost", None)
@@ -116,7 +123,7 @@ if __name__ == "__main__":
     stFilename = args["stFilename"]
 
     # eveホストに接続し、mappingリスト及び、開くべきlab nameを取得する
-    e = Eve(evehost)
+    e = Eve(evehost, isDebug=isDebug)
     conRes = e.connect()
     d= e.get_nodelist()
     mappingList = e.parse_nodelist2port(d)

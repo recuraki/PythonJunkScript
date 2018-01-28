@@ -23,12 +23,14 @@ class Eve():
     opener = None
     lab = None
     lab = ""
+    isDebug = False
 
-    def __init__(self, host):
+    def __init__(self, host, isDebug = False):
         """
         :param host: ホスト名
         """
         self.host = host
+        self.isDebug = isDebug
 
     def connect(self):
         """
@@ -49,27 +51,29 @@ class Eve():
         #　ログインの試行
         u = "http://{0}/api/auth/login".format((self.host))
         res = self.opener.open(u, stJson)
+        self.dprint(res.getheaders())
 
         # 現在開いているlabの取得
         u = "http://{0}/api/auth".format((self.host))
         res = self.opener.open(u)
+        self.dprint(res.getheaders())
         response_body = res.read().decode("utf-8")
+        self.dprint(response_body)
         d = json.loads(response_body)
         data = d.get("data", {})
         self.lab = data.get("lab", "")
 
-    def set_lab(self, lab):
-        self.lab = lab
 
     def get_nodelist(self):
         # [GET] ノード情報の取得
         u = "http://{0}/api/labs/{1}/nodes".format(self.host, self.lab)
-        # print(">> [{0}]".format(u))
+        self.dprint(">> [{0}]".format(u))
 
-        res = self.opener.open(u)
-        # pprint.pprint(res.getheaders())
+        res = self.opener.open(u, timeout=3)
+
+        self.dprint(res.getheaders())
         response_body = res.read().decode("utf-8")
-        # print(response_body)
+        self.dprint(response_body)
         d = json.loads(response_body)
         if d["code"] != 200:
             sys.exit(1)
@@ -77,6 +81,9 @@ class Eve():
 
     def disconnect(self):
         pass
+
+    def set_lab(self, lab):
+        self.lab = lab
 
     def parse_nodelist2port(self, data, statusFilter = None):
         # 取得したノード一覧をnodename : portに変換する補助関数
@@ -93,6 +100,10 @@ class Eve():
             port = node.get("url", "").split(":")[2]
             nodes[hostname] = port
         return nodes
+
+    def dprint(self, str):
+        if self.isDebug:
+            pprint(str)
 
 if __name__ == "__main__":
     e = eve(host)
