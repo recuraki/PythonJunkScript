@@ -45,9 +45,7 @@ class echod():
 # テスト用！
 async def task_1():
     print("task1")
-    loop.stop()
-    res = loop.run_until_complete(asyncio.gather(*[task_2()]))
-    loop.run_forever()
+    asyncio.ensure_future(task_2())
 
 async def task_2():
     print("task2")
