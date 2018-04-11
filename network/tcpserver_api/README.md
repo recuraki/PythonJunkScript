@@ -3,9 +3,11 @@ TCPソケットサーバを書く練習
 要件
 -----
 
-port 10000 - 10004 の5つのポートで値を受け取り、それぞれ1lineを受け取り自分のポート番号を返却するものとする
+起動するとport 10002 - 10003 の2つのポートで値を受け取り、それぞれ1lineを受け取りプロンプトを返却するものとする
 
-PATCH echo/<port>/msg/<msg> を投げることで、それぞれのポート<port>は<msg>を返すものとする
+GET /port/{name} を投げることで現在のプロンプトを返す
 
 
-PUT echo/<port> とすると、新しく、<port>でaの動作をするtcp serverが立ち上がる
+GET /port/{name}/create とすると、新しく、<port>でaの動作をするtcp serverが立ち上がる
+
+GET /port/{name}/set/{desc}とすると、プロンプトが変えられる
