@@ -8,3 +8,4 @@ port 10000 - 10004 の5つのポートで値を受け取り、それぞれ1line�
 PATCH echo/<port>/msg/<msg> を投げることで、それぞれのポート<port>は<msg>を返すものとする
 
 
+PUT echo/<port> とすると、新しく、<port>でaの動作をするtcp serverが立ち上がる
