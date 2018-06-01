@@ -9,3 +9,4 @@ eveGrading/scenario/
 *.swp
 NEEmulator/.idea/
 NEEmulator/venv/pyvenv.cfg
+NEEmulator/venv/
