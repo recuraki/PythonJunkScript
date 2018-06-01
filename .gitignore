@@ -7,3 +7,5 @@ cover
 __pycache__
 eveGrading/scenario/
 *.swp
+NEEmulator/.idea/
+NEEmulator/venv/pyvenv.cfg
