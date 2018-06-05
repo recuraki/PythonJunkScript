@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import socketserver
-import sys
 import yaml
 import re
 from pprint import pprint
+from Logs import Log
 
 # テスト用YAML
 TestServerYaml="""
@@ -16,10 +15,10 @@ class VR(object):
     BUFSIZ: int = 1024
     logseq: int = 0
     loglimit: int = 255
-    logs: list = []
     isdebug: bool = False
     vrName: str = ""
     scenario: list = []
+    log: Log = None
 
     def dp(self, log):
         if self.isdebug:
@@ -31,54 +30,9 @@ class VR(object):
         :param name:
         :param debug:
         """
-        self.setlogseq(0)
-        self.resetlog()
         self.isdebug = debug
         self.vrName = name
-
-    def readscenario
-
-    def delscenario(self, id):
-        pass
-
-    def setlogseq(self, seq):
-        """
-        ログシーケンスの初期化(reset時に使う)
-        :param seq:
-        :return:
-        """
-        self.logseq(seq)
-
-    def resetlog(self):
-        """
-        ログバッファの初期化
-        :return:
-        """
-        self.logs = []
-        self.setlogseq(0)
-
-    def writeLog(self, msg: str, category: str = "default"):
-        """
-        VR内のログ記録
-        :param msg: ログ本文の完全なる文字列
-        :param category:
-        :return:
-        """
-        if self.logseq < self.loglimit:
-            self.logs.append({"seq": self.logseq, "category": category, "msg": msg})
-            self.logseq = self.logseq + 1
-        else:
-            self.dp("log limit")
-
-    def dumpLog(self):
-        """
-        ログをテキストでdumpする
-        :return:
-        """
-        out = []
-        for d in self.logs:
-            out = "[{0}:{1}] {2}".format(d.seq, d.category, d.msg)
-        return "\n".join(out)
+        self.log = Log()
 
     def recvLine(self, s):
         """
