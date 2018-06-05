@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+
 import socketserver
 import sys
 import yaml
@@ -13,51 +14,75 @@ TestServerYaml="""
 class VR(object):
     doexit = False
     BUFSIZ = 1024
+    logseq = 0
+    loglimit = 255
+    logs:list = []
+    isdebug = False
+    vrName = ""
 
-    def handle(self):
+    def dp(self, log):
+        if self.isdebug:
+            pprint(log)
+
+    def __init__(self, name="VR", debug = False):
         """
-        イベントハンドラ本体
-        Connectしたセッションはこれに捕まるので、抜けるときはexitする
+        コンストラクタ
+        :param name:
+        :param debug:
+        """
+        self.setlogseq(0)
+        self.resetlog()
+        self.isdebug = debug
+        self.vrName = name
+
+    def setlogseq(self, seq):
+        """
+        ログシーケンスの初期化(reset時に使う)
+        :param seq:
         :return:
         """
-        # 応答リストの定義
-        self.curBuffer = oracle
+        self.logseq(seq)
 
-        while True:
-            # 1024文字受け取る
-            self.data = self.request.recv(self.BUFSIZ)
-            # セッションが切られた時の処理
-            if self.data == b'':
-                print("EndSession")
-                return
-            # 受け取った文字列の表示
-            print("TelnetRecv[{0}]: {1}".format( self.client_address[0], self.data))
-
-            # 受け取った文字列の処理
-            self.recvCmd(self.data)
-
-            # 処理の結果、終了が明示された時の処理
-            if self.doexit:
-                print("session was deleted")
-                return
-
-    def write(self, s):
-        # 文字列がバイナリの場合、一度文字列に変換
-        if isinstance(s, bytes):
-            s = s.decode(s)
-        s = s + "\n"
-        # console と 相手に応答を返す
-        print("{0}".format(s))
-        self.request.sendall(s.encode("utf-8"))
-
-    def recvCmd(self, s):
+    def resetlog(self):
         """
-        コマンド受信時の処理
+        ログバッファの初期化
+        :return:
+        """
+        self.logs = []
+        self.setlogseq(0)
+
+    def writeLog(self, msg: str, category: str = "default"):
+        """
+        VR内のログ記録
+        :param msg: ログ本文の完全なる文字列
+        :param category:
+        :return:
+        """
+        if self.logseq < self.loglimit:
+            self.logs.append({"seq": self.logseq, "category": category, "msg": msg})
+            self.logseq = self.logseq + 1
+        else:
+            self.dp("log limit")
+
+    def dumpLog(self):
+        """
+        ログをテキストでdumpする
+        :return:
+        """
+        out = []
+        for d in self.logs:
+            out = "[{0}:{1}] {2}".format(d.seq, d.category, d.msg)
+        return "\n".join(out)
+
+    def recvLine(self, s):
+        """
+        新規入力受付時の処理。
         :param s:
         :return:
         """
-        s = s.decode('utf-8')
-        pprint(self.curBuffer)
+        # self.recvCmd(self.data)
+        # s = s.decode('utf-8')
+        self.writeLog("input: ")
         # コマンドリストの正規表現を順次精査
         for p in self.curBuffer:
             m = re.search(p, s)
@@ -107,16 +132,11 @@ class VR(object):
 
 
 if __name__ == "__main__":
-  cfg = yaml.load(TestServerYaml)
+    vr = VR(name="router1")
 
-  val = cfg.get("local", {})
+    cfg = yaml.load(TestServerYaml)
 
-  # コマンドを待ち受けるグローバルリスト
-  oracle = cfg.get("patterns", {})
+    val = cfg.get("local", {})
 
-  # LISTENし、open後のハンドラをMyTCPHandlerに設定
-  server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
-
-  # while 1
-  server.serve_forever()
-
+    # コマンドを待ち受けるグローバルリスト
+    oracle = cfg.get("patterns", {})
