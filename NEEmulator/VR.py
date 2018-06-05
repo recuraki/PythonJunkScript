@@ -12,19 +12,20 @@ TestServerYaml="""
 """
 
 class VR(object):
-    doexit = False
-    BUFSIZ = 1024
-    logseq = 0
-    loglimit = 255
-    logs:list = []
-    isdebug = False
-    vrName = ""
+    doexit: bool = False
+    BUFSIZ: int = 1024
+    logseq: int = 0
+    loglimit: int = 255
+    logs: list = []
+    isdebug: bool = False
+    vrName: str = ""
+    scenario: list = []
 
     def dp(self, log):
         if self.isdebug:
             pprint(log)
 
-    def __init__(self, name="VR", debug = False):
+    def __init__(self, name: str="VR", debug: bool=False):
         """
         コンストラクタ
         :param name:
@@ -34,6 +35,11 @@ class VR(object):
         self.resetlog()
         self.isdebug = debug
         self.vrName = name
+
+    def readscenario
+
+    def delscenario(self, id):
+        pass
 
     def setlogseq(self, seq):
         """

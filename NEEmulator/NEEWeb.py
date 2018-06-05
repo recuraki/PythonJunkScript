@@ -5,6 +5,7 @@ import VRCollection
 import json
 from pprint import pprint
 import yaml
+from VR import VR
 
 
 # 初期値
@@ -16,16 +17,19 @@ vrc = None
 ### Webサーバを作る
 ##########################################################
 
+
 # ダミー関数
-async def web_hello(request):
+async def web_hello(request: web.BaseRequest):
      return web.Response(text="Hello, World!")
 
+
 # 現在 Startしているセッションのリスト
-async def web_getportlist(request):
+async def web_getportlist(request: web.BaseRequest):
     ports = vrc.portlist()
     return web.json_response(text=json.dumps(ports))
 
-async def web_getdetail(request):
+
+async def web_getdetail(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
     print("GET detail [{0}]".format(p))
@@ -39,7 +43,8 @@ async def web_getdetail(request):
     # 処理
     return web.json_response(text=json.dumps({"name": p}))
 
-async def web_createvr(request):
+
+async def web_createvr(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
 
@@ -63,7 +68,8 @@ async def web_createvr(request):
     asyncio.ensure_future(vrc.run(p))
     return web.Response(text="ok")
 
-async def web_putscenario(request):
+
+async def web_putscenario(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
     # VR Collectionからの検索: 存在しなければNG
@@ -84,7 +90,7 @@ async def web_putscenario(request):
     return web.Response(text=str(data))
 
 
-async def web_delscenario(request):
+async def web_delscenario(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
     id = request.match_info["id"]
@@ -96,9 +102,12 @@ async def web_delscenario(request):
         return web.Response(text="Resource not found",
                             status=404)
 
+    e.delscenario(id)
+
     return web.Response(text="name = " + e.prompt)
 
-async def web_restart(request):
+
+async def web_restart(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
     print("Request Vitrual Router [port: {0}]".format(p, id))
@@ -111,7 +120,8 @@ async def web_restart(request):
 
     return web.Response(text="name = " + e.prompt)
 
-async def web_getstatus(request):
+
+async def web_getstatus(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
     print("Request Vitrual Router [port: {0}]".format(p, id))
@@ -133,6 +143,7 @@ async def web_createport(request):
     asyncio.ensure_future(vrc.run(p))
     return web.Response(text="ok")
 
+
 async def web_getsetportname(request):
     p = request.match_info["port"]
     d = request.match_info.get('desc', "NONE")
@@ -142,12 +153,14 @@ async def web_getsetportname(request):
     e.prompt = d
     return web.Response(text="ok")
 
+
 def registTask(site, loop):
     global vrc
     cors = []
     vrc = VRCollection.vrCollection(loop, host=HOST)
     cors.append(site.start())  # webサーバ
     return (cors)
+
 
 app = web.Application()
 # HTTPd用のルーティング設定
