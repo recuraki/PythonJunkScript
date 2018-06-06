@@ -1,14 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import yaml
-import re
 from pprint import pprint
 from Logs import Log
-
-# テスト用YAML
-TestServerYaml="""
-"""
 
 class VR(object):
     doexit: bool = False
@@ -43,21 +37,7 @@ class VR(object):
         # self.recvCmd(self.data)
         # s = s.decode('utf-8')
         self.writeLog("input: ")
-        # コマンドリストの正規表現を順次精査
-        for p in self.curBuffer:
-            m = re.search(p, s)
-            # fetchできた場合
-            if m:
-                # パターン内に含まれる?P<name>を取得し、それらをargsに突っ込む
-                args = {}
-                for x in re.finditer("\?P<([^>]*)>", p):
-                    varname = x.groups()[0]
-                    args[varname] = m.group(varname)
-                # 実際のコマンドを実行する
-                # この際、上記で作成したargsを渡す
-                self.doCmd(p, self.curBuffer[p], args)
-                return True
-        # パターンがいずれにもマッチしない場合の処理
+
         self.write("command not found: " + s)
         return True
 
@@ -88,15 +68,3 @@ class VR(object):
             # 応答を返す
             self.write(s)
             print(liStr)
-
-
-
-if __name__ == "__main__":
-    vr = VR(name="router1")
-
-    cfg = yaml.load(TestServerYaml)
-
-    val = cfg.get("local", {})
-
-    # コマンドを待ち受けるグローバルリスト
-    oracle = cfg.get("patterns", {})
