@@ -2,6 +2,7 @@ import sys
 import asyncio
 from aiohttp import web
 import VRCollection
+from VRCollection import vrCollection
 import json
 from pprint import pprint
 import yaml
@@ -11,7 +12,7 @@ from VR import VR
 # 初期値
 HOST = "127.0.0.1"
 WEBPORT = 1080
-vrc = None
+vrc: VRCollection = None
 
 ##########################################################
 ### Webサーバを作る
@@ -66,17 +67,23 @@ async def web_createvr(request: web.BaseRequest):
 
     # 処理
     asyncio.ensure_future(vrc.run(p))
+    e = vrc.lookup(p)
+    e.loadscenario(data["scenario"])
+
     return web.Response(text="ok")
 
 
 async def web_putscenario(request: web.BaseRequest):
     # 引数の処理
     p = request.match_info["port"]
+
     # VR Collectionからの検索: 存在しなければNG
     e = vrc.lookup(p)
     if not e:
         return web.Response(status=404,
                             reason="Resource Not Found")
+
+    pprint("web_putscenario(): {0}", )
 
     # ユーザからのペイロードの判定と読み込み
     data =  await request.read()
