@@ -6,9 +6,13 @@ import re
 class EndOfRule(Exception):
     pass
 
+class PatternNotFound(Exception):
+    pass
+
 class Scenario(object):
     rules: list = []
     cursor: int = 0
+    currule: dict = {}
 
     def is_exist_by_id(self, ruleid) -> bool:
         # 指定したidのルールが存在するかを確認する
@@ -40,14 +44,20 @@ class Scenario(object):
 
     def nextrule(self):
         # 次のルールを読みに行く
+        self.dp("scenario: nextrule()")
         self.cursor = self.cursor + 1
         if len(self.rules) < self.cursor:
             raise EndOfRule
-
         self.currule = self.rules[self.cursor - 1]
+        pprint("set rule seq {0}".format(self.cursor - 1))
 
     def getcurpattern(self):
-        return self.currule["pattern"]
+        if "pattern" in self.currule:
+            return self.currule["pattern"]
+        else:
+            pprint("PatternNotFound")
+            pprint(self.currule)
+            raise PatternNotFound
 
     def send(self, msg: str):
         # このシナリオに対する文字列の評価
@@ -70,10 +80,22 @@ class Scenario(object):
             ret["rule"] = deepcopy(self.currule)
             ret["match"] = True
 
+            # ルールがpassした場合、次に進む
+            try:
+                self.nextrule()
+            except EndOfRule:
+                pass
+
             return ret
 
         # パターンが一致しなかった場合
-        return False
+        else:
+            ret = {}
+            ret["args"] = {}
+            ret["rule"] = deepcopy(self.currule)
+            ret["match"] = False
+            return ret
+
 
     def read(self, scenarios: list):
         # シナリオを読み込ませる
@@ -112,7 +134,6 @@ class Scenario(object):
         self.dp("DELETE OK")
         return True
 
-]
 import yaml
 testYaml="""
 scenario: # 読み込み時にIDでsortされる
@@ -133,9 +154,6 @@ scenario: # 読み込み時にIDでsortされる
       host: "{host}"
       path: "{path}"
 
-  - id: "999"
-    cmd: "exit"
-
   - id: "020"
     cmd: "wait"
     pattern: null # パターンがnullの場合は即時実行
@@ -146,20 +164,15 @@ if __name__ == "__main__":
     d = yaml.load(testYaml)
     s = Scenario(debug=True)
     s.read(d["scenario"])
-
     pprint(s.rules)
-
     s.delete("020")
     pprint(list(s.rules))
     s.delete("020")
     pprint(list(s.rules))
-
     pprint(s.is_exist_by_id("010"))
     pprint(s.is_exist_by_id("020"))
-
     pprint(s.send("show bgp neighbor 1.1.1.1"))
     pprint(s.send("show bgp neig"))
-    s.nextrule()
     pprint(s.send("show bgp neighbor 1.1.1.1"))
     pprint(s.send("copy running tftp://1.1.1.1/config"))
 
