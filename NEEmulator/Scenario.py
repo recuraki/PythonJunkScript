@@ -138,15 +138,20 @@ import yaml
 testYaml="""
 scenario: # 読み込み時にIDでsortされる
   - id: "001"
-    cmd: "print"
     # patternでマッチした文字列は辞書としてcmdにmatchで渡される
     pattern: "show bgp neighbor (?P<neighbor>[0-9.]+)"
     printafter: "{host}#" # 実行後に返す文字列(主にプロンプト)
-    # > globalで書いちゃっていいかも
-    param: # コマンドに渡されるパラメータ
-     data: 
-       - "{neighbor} establish"
-       - "{neighbor} establish"
+    action:
+     - cmd: "print"
+       param: # コマンドに渡されるパラメータ
+       data: 
+        - "1st line {neighbor} establish"
+        - "2nd line"
+     - cmd: "print"
+       param: # コマンドに渡されるパラメータ
+        data: 
+         - "3rd line"
+        
   - id: "010"
     cmd: "tftpput"
     pattern: "copy running tftp://(?P<host>[^/]+)/(?P<path>.*)$"
@@ -158,6 +163,10 @@ scenario: # 読み込み時にIDでsortされる
     cmd: "wait"
     pattern: null # パターンがnullの場合は即時実行
     param: null
+
+  - id: "999"
+    cmd: "exit"
+
 
 """
 if __name__ == "__main__":
