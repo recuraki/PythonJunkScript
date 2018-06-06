@@ -1,25 +1,14 @@
 
 from pprint import pprint
 from copy import deepcopy
+import re
+
+class EndOfRule(Exception):
+    pass
 
 class Scenario(object):
     rules: list = []
-
-    def dp(self, log):
-        if self.isdebug:
-            pprint(log)
-
-    def __init__(self, debug: bool=False):
-        self.isdebug = debug
-
-    def sort(self):
-        self.dp("scenario: sort()")
-        self.rules.sort(key=lambda x: x["id"])
-
-    def read(self, scenarios: list):
-        self.dp("scenario: read()")
-        self.rules = deepcopy(scenarios)
-        self.sort()
+    cursor: int = 0
 
     def is_exist_by_id(self, ruleid) -> bool:
         # 指定したidのルールが存在するかを確認する
@@ -30,6 +19,86 @@ class Scenario(object):
             return True
         else:
             return False
+
+    def dp(self, log):
+        if self.isdebug:
+            pprint(log)
+
+    def __init__(self, debug: bool=False):
+        self.isdebug = debug
+
+    def reset(self):
+        # 初期化
+        self.sort()
+        self.cursor = 0
+        self.nextrule()
+
+    def sort(self):
+        # 自分のバッファ内にあるルールを key = idでソートする
+        self.dp("scenario: sort()")
+        self.rules.sort(key=lambda x: x["id"])
+
+    def nextrule(self):
+        # 次のルールを読みに行く
+        self.cursor = self.cursor + 1
+        if len(self.rules) < self.cursor:
+            raise EndOfRule
+
+        self.currule = self.rules[self.cursor - 1]
+
+    def getcurpattern(self):
+        return self.currule["pattern"]
+
+    def send(self, msg: str):
+        # このシナリオに対する文字列の評価
+        # 期待する文字列であった場合、
+        self.dp("Scenario.send(): cur ruleid{0} try-str {1}".format(self.currule["id"], msg))
+        args = {}
+        m = re.search(self.getcurpattern(), msg)
+        # fetchできた場合
+        if m:
+            # パターン内に含まれる?P<name>を取得したなら、それらをargsに突っ込む
+            for x in re.finditer("\?P<([^>]*)>", self.getcurpattern()):
+                varname = x.groups()[0]
+                args[varname] = m.group(varname)
+
+            # 現在のルールを返す
+            # args: マッチした文字列のパターン
+            # rule: そのルール自身
+            ret = {}
+            ret["args"] = deepcopy(args)
+            ret["rule"] = deepcopy(self.currule)
+            ret["match"] = True
+
+            return ret
+
+        # パターンが一致しなかった場合
+        return False
+
+    def read(self, scenarios: list):
+        # シナリオを読み込ませる
+        self.dp("scenario: read()")
+        self.rules = deepcopy(scenarios)
+        self.reset()
+
+
+    def add(self, ruleid, rule: dict, override: bool=False):
+        # idにルールを追加する
+        # return: True:成功, False:失敗(404)
+        self.dp("scenario: add(id = {0})".format(ruleid))
+
+        # overrideが設定されている場合、そのルールを削除しようとする
+        if override:
+            self.delete(ruleid)
+        else:
+            # override = Falseなら存在チェック
+            if self.is_exist_by_id(ruleid):
+                self.dp("delete: id is already exist")
+                return False
+
+        # シナリオの追加と再整列
+        self.rules.append(rule)
+        self.reset()
 
     def delete(self, ruleid):
         # 指定されたidのルールを削除する
@@ -43,10 +112,7 @@ class Scenario(object):
         self.dp("DELETE OK")
         return True
 
-    def add(self, ruleid, scenario: dict, override: bool=False):
-        pass
-
-
+]
 import yaml
 testYaml="""
 scenario: # 読み込み時にIDでsortされる
@@ -85,9 +151,16 @@ if __name__ == "__main__":
 
     s.delete("020")
     pprint(list(s.rules))
-
     s.delete("020")
     pprint(list(s.rules))
 
     pprint(s.is_exist_by_id("010"))
     pprint(s.is_exist_by_id("020"))
+
+    pprint(s.send("show bgp neighbor 1.1.1.1"))
+    pprint(s.send("show bgp neig"))
+    s.nextrule()
+    pprint(s.send("show bgp neighbor 1.1.1.1"))
+    pprint(s.send("copy running tftp://1.1.1.1/config"))
+
+
