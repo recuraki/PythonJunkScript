@@ -3,6 +3,7 @@
 
 from pprint import pprint
 from Logs import Log
+from Scenario import Scenario
 
 class VR(object):
     doexit: bool = False
@@ -11,7 +12,7 @@ class VR(object):
     loglimit: int = 255
     isdebug: bool = False
     vrName: str = ""
-    scenario: list = []
+    scenario: Scenario = None
     log: Log = None
 
     def dp(self, log):
@@ -27,19 +28,26 @@ class VR(object):
         self.isdebug = debug
         self.vrName = name
         self.log = Log()
+        self.scenario = Scenario(debug=True)
 
-    def recvLine(self, s):
+    def loadscenario(self, data):
+        self.dp("VR loadscenario() ")
+        self.scenario.read(data)
+
+    def send(self, s):
         """
         新規入力受付時の処理。
         :param s:
         :return:
         """
-        # self.recvCmd(self.data)
-        # s = s.decode('utf-8')
-        self.writeLog("input: ")
-
-        self.write("command not found: " + s)
-        return True
+        self.dp("VR.send(): vrName[{0}] recv: {1}".format(self.vrName, s))
+        ret = self.scenario.send(s)
+        if ret.get("match", False):
+            print("match")
+            responseStr = "match"
+        else:
+            responseStr = False
+        return responseStr
 
     def doCmd(self, key, p, args):
         # 動作モードの確認
