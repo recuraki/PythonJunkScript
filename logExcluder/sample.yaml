@@ -1,0 +1,21 @@
+rules:
+ - name: global
+   rule:
+    - desc: cron
+      action: deny
+      re: "^.*cron.*$"
+    - desc: ntp
+      action: deny
+      re: ".*ntp.*"
+
+ - name: ciscopre
+   preinclude:
+    - global
+
+ - name: "sample.in"
+   preinclude:
+    - ciscopre
+   rule:
+    - desc: ntp2
+      action: deny
+      re: ".*de.*"
