@@ -107,3 +107,31 @@ EXPECT DELETE BUT NOT DELETE
 !!!!!!!!! NG !!!!!!!!!
 ```
 
+# afterにするためのCommandを得る
+階層の変更がうまくいかない場合は、適当にendを入れてやる．
+
+```
+./CiscoContextualDiff.py -b sample_before -a sample_after -g | tr "|" "\n"
+[add]
+interface Loopback0 
+ description loopback
+interface Loopback0 
+ ip ospf cost 10
+ip nat translation timeout 600
+
+[delete]
+interface Loopback0 
+ ip ospf cost 1
+interface Loopback1
+interface Loopback1 
+ ip address 10.10.0.13 255.255.255.255
+interface Loopback1 
+ ip ospf cost 1
+interface Loopback1 
+ ipv6 address 2001:DB8:0:10::12/128
+interface Loopback1 
+ ospfv3 cost 1
+ip nat translation timeout 86400
+vrf definition Mgmt-intf 
+ address-family ipv4
+```
