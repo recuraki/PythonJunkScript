@@ -39,10 +39,10 @@ if __name__ == "__main__":
     with open(args["infilename"], "r") as fr:
         if args["outfilename"] is None:
             fdsiz = os.path.getsize(args["infilename"])
-            e.parse(fr, None, desctiption=args["infilename"], sizefd=fdsiz, tqdmEnable=False)
+            e.parse(fr, None, desctiption=args["infilename"], sizefd=fdsiz, tqdmEnable=False, color=True)
         else:
             with open(args["outfilename"], "w") as fw:
                 fdsiz = os.path.getsize(args["infilename"])
-                e.parse(fr, fw, desctiption=args["infilename"], sizefd=fdsiz)
+                e.parse(fr, fw, desctiption=args["infilename"], sizefd=fdsiz, color=False)
 
 
