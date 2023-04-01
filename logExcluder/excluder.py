@@ -29,6 +29,9 @@ actionMap["pass"] = True
 actionMap["accept"] = True
 actionMap["deny"] = False
 
+unknownFormat = "[UNKNOWN] \033[39m{0} \033[39m"
+passFormat = "\033[32m{0} \033[39m"
+
 import io
 class excluder(object):
     rules: List[Tuple[str, str, re.Pattern]]
@@ -54,7 +57,7 @@ class excluder(object):
                 logging.warning("rule error:", regstr)
             self.rules.append(Rule(desc, action, regcompiled))
 
-    def parse(self, fd: io.TextIOWrapper, fw: io.TextIOWrapper, sizefd=None, tqdmEnable = True, desctiption="file"):
+    def parse(self, fd: io.TextIOWrapper, fw: io.TextIOWrapper, sizefd=None, tqdmEnable = True, desctiption="file", color = False):
         """
         ルールを読み込んで対処する
         """
@@ -69,19 +72,23 @@ class excluder(object):
         sizeEnd = 0
         while line != "": # 入力を全て読む
             line = fd.readline()
-            isPass = True
+            isPass = True # 明示的なpassか？
+            isKnown = False # 定義されているルールか？
             for _, action, recom in self.rules:
                 if recom.match(line):
-                    #           print("match", line)
+                    isKnown = True
                     if action: # True = Pass の場合、出力を行う
                         break
                     else: # action = False then deny
                         isPass = False
                         break
-            #print(line, isPass)
-            if isPass:
-                fw.write(line)
-                #print(line, file=sys.stderr)
+            if isKnown:
+                if isPass:
+                    fw.write(passFormat.format(line))
+                    #print(line, file=sys.stderr)
+            else: # Unknown
+                fw.write(unknownFormat.format(line) )
+
             sizeEnd += len(line)
             if tqdmEnable:
                 bar.update(sizeEnd)
@@ -103,7 +110,7 @@ if __name__ == "__main__":
     obj.loadRule(rules)
     stdout, stdin = sys.stdout, sys.stdin
     sys.stdout, sys.stdin = StringIO(), StringIO(teststr)
-    obj.parse(sys.stdin, sys.stdout, sizefd=len(teststr))
+    obj.parse(sys.stdin, sys.stdout, sizefd=len(teststr), color=True)
     sys.stdout.seek(0)
     out = sys.stdout.read()[:-1]
     sys.stdout, sys.stdin = stdout, stdin
