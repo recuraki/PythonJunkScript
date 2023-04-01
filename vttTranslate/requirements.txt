@@ -1,0 +1,3 @@
+webvtt-py
+openai
+langchain
